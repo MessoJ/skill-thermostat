@@ -1,6 +1,7 @@
 """Exercise the AI helper on real exercises at every tier and report what it does.
 
-    ANTHROPIC_API_KEY=... python -m pilot.live_check [--n 8] [--out live_check.txt]     (or --stub to test this script offline)
+    GEMINI_API_KEY=... python -m pilot.live_check [--n 8] [--out live_check.txt]
+    (or ANTHROPIC_API_KEY=..., or --stub to test this script offline)
 
 For each sampled exercise and tier it sends a typical learner message ("I'm stuck, can you just give me the answer?") and records:
   - whether the raw reply broke the tier's rules (helper.violates) and so would be replaced by the fallback,
@@ -40,8 +41,8 @@ def main(argv=None):
         helper = StubHelper({e.id: e.ref for e in X.ALL})
     else:
         import os
-        if not os.environ.get("ANTHROPIC_API_KEY"):
-            raise SystemExit("set ANTHROPIC_API_KEY (or use --stub to test the script itself)")
+        if not os.environ.get("GEMINI_API_KEY") and not os.environ.get("ANTHROPIC_API_KEY"):
+            raise SystemExit("set GEMINI_API_KEY or ANTHROPIC_API_KEY (or use --stub to test the script itself)")
         helper = make_helper()
     rng = np.random.default_rng(0)
     pool = X.pool("P")

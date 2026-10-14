@@ -18,7 +18,7 @@ The `pilot/` package implements the randomized controlled study application buil
   - For students (`floor_abs=None`), the floor is anchored at $\min(\hat{\theta}_0, d_{\max}) - \Delta$ ($\Delta = 0.40$) and capped at $q_{10,0} - 0.05$ so neither ceiling scorers nor struggling novices are locked out of initial assistance.
   - For staff (`join(consent=True, floor_abs=...)`), the floor is fixed at the role's required unassisted standard.
 - **Urgent Quota:** Learners can mark up to 3 of their last 20 practice tasks `urgent`. Urgent tasks always receive `full` assistance and are never probed.
-- **Tiered AI Helper & AST Scrubber (`helper.py`):** The server selects `off`, `nudge`, `hints`, or `full`. Outgoing LLM responses at `nudge` and `hints` are screened by `helper.scrub`, which blocks code fences exceeding line limits, raw function definitions, line-level matches, and AST-isomorphic solutions with renamed variables.
+- **Tiered AI Helper & AST Scrubber (`helper.py`):** The server selects `off`, `nudge`, `hints`, or `full`. Native support for Google Gemini (`GEMINI_API_KEY`) and Anthropic Claude (`ANTHROPIC_API_KEY`), falling back to `StubHelper` offline. Outgoing LLM responses at `nudge` and `hints` are screened by `helper.scrub`, which blocks code fences exceeding line limits, raw function definitions, line-level matches, and AST-isomorphic solutions with renamed variables.
 
 ---
 
@@ -66,7 +66,11 @@ staff: delivery crunch (urgent)       thermostat        77%          2%     +0.9
 
 * **Start the web server:**
   ```bash
-  python -m pilot.study_app --db study.db --host 127.0.0.1 --port 8001
+  # Using Gemini:
+  GEMINI_API_KEY=... python -m pilot.study_app --db study.db --host 127.0.0.1 --port 8001
+
+  # Or using Anthropic Claude:
+  ANTHROPIC_API_KEY=... python -m pilot.study_app --db study.db --host 127.0.0.1 --port 8001
   ```
 * **Summarize study database by arm:**
   ```bash
@@ -79,7 +83,7 @@ staff: delivery crunch (urgent)       thermostat        77%          2%     +0.9
   When `pilot/calibrated.json` is present, `pilot/exercises.py` automatically loads the empirical difficulties for all items with $n \ge 30$ unassisted responses.
 * **Audit live LLM helper compliance across tiers:**
   ```bash
-  ANTHROPIC_API_KEY=... python -m pilot.live_check --n 8 --out live_check.txt
+  GEMINI_API_KEY=... python -m pilot.live_check --n 8 --out live_check.txt
   ```
 * **Validate new exercise batches:**
   ```bash

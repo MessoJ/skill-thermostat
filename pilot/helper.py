@@ -8,8 +8,11 @@ The model is never given the reference solution or hidden tests. Prompts alone a
 the tier, so every reply is also screened by `scrub` before the learner sees it.
 """
 import ast
+import json
 import os
 import re
+import urllib.error
+import urllib.request
 
 SYSTEM = {
     "full": "You are a coding assistant inside a learning app. Help the learner solve their Python exercise. "
@@ -89,6 +92,49 @@ class StubHelper:
         return "What should happen for the smallest possible input?"
 
 
+class GeminiHelper:
+    """Gemini via Google Generative Language REST API. Needs GEMINI_API_KEY."""
+
+    def __init__(self, model=None, api_key=None):
+        self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
+        if not self.api_key:
+            raise ValueError("GEMINI_API_KEY must be set")
+        self.model = model or os.environ.get("GEMINI_MODEL") or os.environ.get("HELPER_MODEL", "gemini-2.5-flash")
+
+    def reply(self, tier, task, message, code):
+        user = (f"Exercise: {task['title']}\n{task['prompt']}\nFunction: {task['signature']}\n\n"
+                f"Learner's current code:\n```python\n{code}\n```\n\nLearner's message: {message}")
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+        payload = {
+            "systemInstruction": {
+                "parts": [{"text": SYSTEM[tier]}]
+            },
+            "contents": [
+                {
+                    "role": "user",
+                    "parts": [{"text": user}]
+                }
+            ],
+            "generationConfig": {
+                "maxOutputTokens": 600,
+                "temperature": 0.7
+            }
+        }
+        data = json.dumps(payload).encode("utf-8")
+        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as resp:
+                body = json.loads(resp.read().decode("utf-8"))
+        except urllib.error.HTTPError as e:
+            err_body = e.read().decode("utf-8", errors="replace")
+            raise RuntimeError(f"Gemini API error ({e.code}): {err_body}") from e
+        candidates = body.get("candidates", [])
+        if not candidates:
+            return ""
+        parts = candidates[0].get("content", {}).get("parts", [])
+        return "".join(p.get("text", "") for p in parts)
+
+
 class ClaudeHelper:
     """Claude via the Messages API. Needs `pip install anthropic` and ANTHROPIC_API_KEY."""
 
@@ -106,6 +152,8 @@ class ClaudeHelper:
 
 
 def make_helper(solutions=None):
+    if os.environ.get("GEMINI_API_KEY"):
+        return GeminiHelper()
     if os.environ.get("ANTHROPIC_API_KEY"):
         try:
             return ClaudeHelper()

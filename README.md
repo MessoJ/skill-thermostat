@@ -50,7 +50,7 @@ skill-thermostat/
 │   ├── bank_ext/              # 150 validated coding exercises across pools A, B, C, P
 │   ├── study.py               # SQLite study engine, CAT baseline, ZPD/Fisher task selector
 │   ├── study_app.py           # Flask HTTP API and admin summary endpoints
-│   ├── helper.py              # Claude / Stub tiered tutor + AST & regex leak scrubber
+│   ├── helper.py              # Gemini / Claude / Stub tiered tutor + AST & regex leak scrubber
 │   ├── runner.py              # Local & remote isolated code execution harness
 │   ├── runner_service.py      # Standalone container HTTP service for untrusted code
 │   ├── calibrate.py           # Marginal Maximum Likelihood (EM + Newton-Raphson) IRT calibrator
@@ -81,11 +81,11 @@ python -m skill_thermostat.sweep --quick --out sweep_results.json
 
 ### 3. Run the Pilot Study Locally or via Hardened Docker Sandbox
 ```bash
-# Local development server (uses offline StubHelper unless ANTHROPIC_API_KEY is set)
-python -m pilot.study_app --db study.db --port 8001
+# Local development server with Gemini helper (or ANTHROPIC_API_KEY, or offline StubHelper)
+GEMINI_API_KEY=... python -m pilot.study_app --db study.db --port 8001
 
 # Production two-container deployment (isolated network-free code runner)
-docker compose up --build
+GEMINI_API_KEY=... docker compose up --build
 ```
 
 ### 4. Evaluate Personas, Calibrate Items & Generate Study Reports

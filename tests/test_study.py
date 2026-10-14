@@ -317,3 +317,36 @@ def test_helper_denied_event_persists_after_403(client):
     with eng.tx() as con:
         evs = con.execute("SELECT kind FROM events WHERE task=?", (t["task_id"],)).fetchall()
     assert [e["kind"] for e in evs] == ["helper_denied"]
+
+
+def test_gemini_helper_request_format(monkeypatch):
+    import json
+    from pilot.helper import GeminiHelper, make_helper
+
+    recorded = {}
+
+    class FakeResponse:
+        def __enter__(self):
+            return self
+        def __exit__(self, *args):
+            pass
+        def read(self):
+            return b'{"candidates": [{"content": {"parts": [{"text": "Consider the base case."}]}}]}'
+
+    def fake_urlopen(req, timeout=30):
+        recorded["url"] = req.full_url
+        recorded["data"] = json.loads(req.data.decode("utf-8"))
+        recorded["headers"] = dict(req.headers)
+        return FakeResponse()
+
+    monkeypatch.setattr("urllib.request.urlopen", fake_urlopen)
+    monkeypatch.setenv("GEMINI_API_KEY", "test-key-123")
+
+    h = make_helper()
+    assert isinstance(h, GeminiHelper)
+    task = dict(id="p01", title="Sum evens", prompt="Sum all evens", signature="sum_evens(xs)")
+    reply = h.reply("hints", task, "I need help", "def sum_evens(xs): pass")
+    assert reply == "Consider the base case."
+    assert "key=test-key-123" in recorded["url"]
+    assert recorded["data"]["generationConfig"]["maxOutputTokens"] == 600
+    assert recorded["data"]["contents"][0]["role"] == "user"
