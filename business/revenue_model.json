@@ -1,0 +1,248 @@
+{
+  "unit_economics": {
+    "enterprise": {
+      "price_per_seat_mo": 35.0,
+      "calls_per_mo": 45,
+      "llm_cogs_mo": 0.18,
+      "runner_cogs_mo": 0.09,
+      "total_cogs_mo": 0.27,
+      "gross_margin_pct": 99.2
+    },
+    "edtech": {
+      "price_per_seat_mo": 9.0,
+      "calls_per_mo": 60,
+      "llm_cogs_mo": 0.24,
+      "runner_cogs_mo": 0.135,
+      "total_cogs_mo": 0.375,
+      "gross_margin_pct": 95.8
+    }
+  },
+  "customer_roi": {
+    "annual_seat_cost": 420.0,
+    "incident_risk_saved_yr": 1500.0,
+    "senior_review_saved_yr": 3000.0,
+    "onboarding_velocity_yr": 1800.0,
+    "total_annual_value": 6300.0,
+    "net_annual_value": 5880.0,
+    "roi_multiple": 15.0,
+    "empirical_metrics": {
+      "ai_assistance_preserved_pct": 75.0,
+      "time_below_floor_reduction_pct": 47.0,
+      "latent_skill_gain_sd": 0.92
+    }
+  },
+  "five_year_projections": [
+    {
+      "year": 1,
+      "enterprise_seats": 200,
+      "edtech_seats": 1000,
+      "enterprise_revenue": 84000,
+      "edtech_revenue": 81000,
+      "total_revenue": 165000,
+      "total_cogs": 4023,
+      "gross_profit": 160977,
+      "gross_margin_pct": 97.6,
+      "opex": 86250,
+      "net_operating_income": 74727,
+      "net_margin_pct": 45.3
+    },
+    {
+      "year": 2,
+      "enterprise_seats": 1200,
+      "edtech_seats": 5000,
+      "enterprise_revenue": 504000,
+      "edtech_revenue": 405000,
+      "total_revenue": 909000,
+      "total_cogs": 20763,
+      "gross_profit": 888237,
+      "gross_margin_pct": 97.7,
+      "opex": 276800,
+      "net_operating_income": 611437,
+      "net_margin_pct": 67.3
+    },
+    {
+      "year": 3,
+      "enterprise_seats": 4000,
+      "edtech_seats": 20000,
+      "enterprise_revenue": 1680000,
+      "edtech_revenue": 1620000,
+      "total_revenue": 3300000,
+      "total_cogs": 80460,
+      "gross_profit": 3219540,
+      "gross_margin_pct": 97.6,
+      "opex": 814000,
+      "net_operating_income": 2405540,
+      "net_margin_pct": 72.9
+    },
+    {
+      "year": 4,
+      "enterprise_seats": 10000,
+      "edtech_seats": 50000,
+      "enterprise_revenue": 4200000,
+      "edtech_revenue": 4050000,
+      "total_revenue": 8250000,
+      "total_cogs": 201150,
+      "gross_profit": 8048850,
+      "gross_margin_pct": 97.6,
+      "opex": 1687500,
+      "net_operating_income": 6361350,
+      "net_margin_pct": 77.1
+    },
+    {
+      "year": 5,
+      "enterprise_seats": 25000,
+      "edtech_seats": 120000,
+      "enterprise_revenue": 10500000,
+      "edtech_revenue": 9720000,
+      "total_revenue": 20220000,
+      "total_cogs": 486000,
+      "gross_profit": 19734000,
+      "gross_margin_pct": 97.6,
+      "opex": 3326400,
+      "net_operating_income": 16407600,
+      "net_margin_pct": 81.1
+    }
+  ],
+  "empirical_scenarios": {
+    "student: strong, skill holds": {
+      "thermostat": {
+        "ai_share": 0.74,
+        "below_floor": 0.0,
+        "end_skill": 1.41,
+        "verdicts": "use_ai_in_moderation x5"
+      },
+      "always_on": {
+        "ai_share": 1.0,
+        "below_floor": 0.0,
+        "end_skill": 1.36,
+        "verdicts": "not_enough_evidence x5"
+      }
+    },
+    "student: strong but AI-dependent": {
+      "thermostat": {
+        "ai_share": 0.73,
+        "below_floor": 0.0,
+        "end_skill": 1.04,
+        "verdicts": "use_ai_in_moderation x5"
+      },
+      "always_on": {
+        "ai_share": 1.0,
+        "below_floor": 0.47,
+        "end_skill": 0.12,
+        "verdicts": "not_enough_evidence x5"
+      }
+    },
+    "student: weak, learns by doing": {
+      "thermostat": {
+        "ai_share": 0.77,
+        "below_floor": 0.0,
+        "end_skill": 0.65,
+        "verdicts": "use_ai_in_moderation x4, keep_using_ai x1"
+      },
+      "always_on": {
+        "ai_share": 1.0,
+        "below_floor": 0.0,
+        "end_skill": 0.31,
+        "verdicts": "not_enough_evidence x5"
+      }
+    },
+    "student: weak and sliding": {
+      "thermostat": {
+        "ai_share": 0.75,
+        "below_floor": 0.08,
+        "end_skill": -0.35,
+        "verdicts": "use_ai_in_moderation x4, reduce_ai x1"
+      },
+      "always_on": {
+        "ai_share": 1.0,
+        "below_floor": 0.67,
+        "end_skill": -1.54,
+        "verdicts": "not_enough_evidence x5"
+      }
+    },
+    "student: gets outside help on probes": {
+      "thermostat": {
+        "ai_share": 0.75,
+        "below_floor": 0.11,
+        "end_skill": -0.64,
+        "verdicts": "check_measurements x4, use_ai_in_moderation x1"
+      },
+      "always_on": {
+        "ai_share": 1.0,
+        "below_floor": 0.57,
+        "end_skill": -1.34,
+        "verdicts": "not_enough_evidence x5"
+      }
+    },
+    "student: erratic answers": {
+      "thermostat": {
+        "ai_share": 0.77,
+        "below_floor": 0.0,
+        "end_skill": 0.71,
+        "verdicts": "use_ai_in_moderation x5"
+      },
+      "always_on": {
+        "ai_share": 1.0,
+        "below_floor": 0.0,
+        "end_skill": 0.32,
+        "verdicts": "not_enough_evidence x5"
+      }
+    },
+    "student: quits early": {
+      "thermostat": {
+        "ai_share": 0.85,
+        "below_floor": 0.0,
+        "end_skill": 1.31,
+        "verdicts": "not_enough_evidence x5"
+      },
+      "always_on": {
+        "ai_share": 1.0,
+        "below_floor": 0.0,
+        "end_skill": 1.3,
+        "verdicts": "not_enough_evidence x5"
+      }
+    },
+    "staff: meets role standard": {
+      "thermostat": {
+        "ai_share": 0.75,
+        "below_floor": 0.0,
+        "end_skill": 1.23,
+        "verdicts": "use_ai_in_moderation x4, keep_using_ai x1"
+      },
+      "always_on": {
+        "ai_share": 1.0,
+        "below_floor": 0.0,
+        "end_skill": 1.02,
+        "verdicts": "stale_evidence x5"
+      }
+    },
+    "staff: below role standard": {
+      "thermostat": {
+        "ai_share": 0.0,
+        "below_floor": 0.0,
+        "end_skill": 1.86,
+        "verdicts": "practice_without_ai x2, reduce_ai x2, use_ai_in_moderation x1"
+      },
+      "always_on": {
+        "ai_share": 1.0,
+        "below_floor": 1.0,
+        "end_skill": 0.36,
+        "verdicts": "stale_evidence x5"
+      }
+    },
+    "staff: delivery crunch (urgent)": {
+      "thermostat": {
+        "ai_share": 0.75,
+        "below_floor": 0.0,
+        "end_skill": 0.96,
+        "verdicts": "use_ai_in_moderation x4, reduce_ai x1"
+      },
+      "always_on": {
+        "ai_share": 1.0,
+        "below_floor": 0.0,
+        "end_skill": 0.52,
+        "verdicts": "not_enough_evidence x5"
+      }
+    }
+  }
+}
