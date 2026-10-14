@@ -1,0 +1,2777 @@
+{
+ "tune_seeds": [
+  200,
+  201
+ ],
+ "valid_seeds": [
+  300,
+  301,
+  302
+ ],
+ "tune": [
+  {
+   "name": "basic  ramp=(+0.05,+0.30) pi_min=0.04",
+   "spec": {
+    "name": "basic  ramp=(+0.05,+0.30) pi_min=0.04",
+    "policy": "thermostat",
+    "cfg": {
+     "m_lo": 0.05,
+     "m_hi": 0.3,
+     "pi_min": 0.04
+    },
+    "default": false
+   },
+   "viol": 0.026269444444444446,
+   "viol_w4": 0.07770833333333334,
+   "viol_contam": 0.0029333333333333334,
+   "cost": 0.28018253303472984,
+   "cost_benign": 0.23869087517446252,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7613091248255375
+    ],
+    "W2 atrophy": [
+     0.0010999999999999998,
+     0.718616763454043
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7275579647716545
+    ],
+    "W4 severe atrophy": [
+     0.07770833333333334,
+     0.6717860148098458
+    ],
+    "W3 contam30": [
+     0.0029333333333333334,
+     0.8120953944599562
+    ]
+   }
+  },
+  {
+   "name": "basic  ramp=(+0.05,+0.30) pi_min=0.10",
+   "spec": {
+    "name": "basic  ramp=(+0.05,+0.30) pi_min=0.10",
+    "policy": "thermostat",
+    "cfg": {
+     "m_lo": 0.05,
+     "m_hi": 0.3,
+     "pi_min": 0.1
+    },
+    "default": false
+   },
+   "viol": 0.026922222222222222,
+   "viol_w4": 0.08029166666666666,
+   "viol_contam": 0.0011666666666666668,
+   "cost": 0.27980253229414975,
+   "cost_benign": 0.2386677963446655,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7613322036553345
+    ],
+    "W2 atrophy": [
+     0.000225,
+     0.7204659835920173
+    ],
+    "W3 bifurcated": [
+     0.00025,
+     0.728517878952577
+    ],
+    "W4 severe atrophy": [
+     0.08029166666666666,
+     0.6704738046234721
+    ],
+    "W3 contam30": [
+     0.0011666666666666668,
+     0.8075307236587757
+    ]
+   }
+  },
+  {
+   "name": "basic  ramp=(-0.05,+0.20) pi_min=0.04",
+   "spec": {
+    "name": "basic  ramp=(-0.05,+0.20) pi_min=0.04",
+    "policy": "thermostat",
+    "cfg": {
+     "m_lo": -0.05,
+     "m_hi": 0.2,
+     "pi_min": 0.04
+    },
+    "default": true
+   },
+   "viol": 0.06010277777777778,
+   "viol_w4": 0.17367500000000002,
+   "viol_contam": 0.0076166666666666666,
+   "cost": 0.22448969667539975,
+   "cost_benign": 0.16571368739493808,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8342863126050619
+    ],
+    "W2 atrophy": [
+     0.005158333333333333,
+     0.7795177054575655
+    ],
+    "W3 bifurcated": [
+     0.0014750000000000002,
+     0.7911525636159982
+    ],
+    "W4 severe atrophy": [
+     0.17367500000000002,
+     0.6970846316197756
+    ],
+    "W3 contam30": [
+     0.0076166666666666666,
+     0.8648724174437291
+    ]
+   }
+  },
+  {
+   "name": "basic  ramp=(-0.05,+0.20) pi_min=0.10",
+   "spec": {
+    "name": "basic  ramp=(-0.05,+0.20) pi_min=0.10",
+    "policy": "thermostat",
+    "cfg": {
+     "m_lo": -0.05,
+     "m_hi": 0.2,
+     "pi_min": 0.1
+    },
+    "default": false
+   },
+   "viol": 0.05435555555555555,
+   "viol_w4": 0.15935833333333332,
+   "viol_contam": 0.003416666666666667,
+   "cost": 0.23005299676947555,
+   "cost_benign": 0.1756288280958238,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8243711719041762
+    ],
+    "W2 atrophy": [
+     0.003175,
+     0.7740414633325692
+    ],
+    "W3 bifurcated": [
+     0.0005333333333333334,
+     0.7839377978887401
+    ],
+    "W4 severe atrophy": [
+     0.15935833333333332,
+     0.6974375797966121
+    ],
+    "W3 contam30": [
+     0.003416666666666667,
+     0.8499398471840549
+    ]
+   }
+  },
+  {
+   "name": "basic  ramp=(-0.15,+0.10) pi_min=0.04",
+   "spec": {
+    "name": "basic  ramp=(-0.15,+0.10) pi_min=0.04",
+    "policy": "thermostat",
+    "cfg": {
+     "m_lo": -0.15,
+     "m_hi": 0.1,
+     "pi_min": 0.04
+    },
+    "default": false
+   },
+   "viol": 0.10188611111111112,
+   "viol_w4": 0.2861666666666667,
+   "viol_contam": 0.0121,
+   "cost": 0.17867009685481539,
+   "cost_benign": 0.11774220621674036,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8822577937832596
+    ],
+    "W2 atrophy": [
+     0.016366666666666668,
+     0.831156329532877
+    ],
+    "W3 bifurcated": [
+     0.003125,
+     0.8425388719726463
+    ],
+    "W4 severe atrophy": [
+     0.2861666666666667,
+     0.7293666172919553
+    ],
+    "W3 contam30": [
+     0.0121,
+     0.894011252012971
+    ]
+   }
+  },
+  {
+   "name": "basic  ramp=(-0.15,+0.10) pi_min=0.10",
+   "spec": {
+    "name": "basic  ramp=(-0.15,+0.10) pi_min=0.10",
+    "policy": "thermostat",
+    "cfg": {
+     "m_lo": -0.15,
+     "m_hi": 0.1,
+     "pi_min": 0.1
+    },
+    "default": false
+   },
+   "viol": 0.08760555555555555,
+   "viol_w4": 0.25105,
+   "viol_contam": 0.005033333333333334,
+   "cost": 0.19114477849626932,
+   "cost_benign": 0.13551987854334513,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8644801214566549
+    ],
+    "W2 atrophy": [
+     0.010008333333333334,
+     0.8178404324498023
+    ],
+    "W3 bifurcated": [
+     0.0017583333333333333,
+     0.827430754142368
+    ],
+    "W4 severe atrophy": [
+     0.25105,
+     0.7256695779660975
+    ],
+    "W3 contam30": [
+     0.005033333333333334,
+     0.8737866540728878
+    ]
+   }
+  },
+  {
+   "name": "basic  ramp=(-0.25,+0.05) pi_min=0.04",
+   "spec": {
+    "name": "basic  ramp=(-0.25,+0.05) pi_min=0.04",
+    "policy": "thermostat",
+    "cfg": {
+     "m_lo": -0.25,
+     "m_hi": 0.05,
+     "pi_min": 0.04
+    },
+    "default": false
+   },
+   "viol": 0.12353333333333333,
+   "viol_w4": 0.342675,
+   "viol_contam": 0.013325,
+   "cost": 0.16067972097463157,
+   "cost_benign": 0.10442170335030987,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8955782966496901
+    ],
+    "W2 atrophy": [
+     0.0239,
+     0.8513550549946514
+    ],
+    "W3 bifurcated": [
+     0.004025,
+     0.8609146946417522
+    ],
+    "W4 severe atrophy": [
+     0.342675,
+     0.7494330698153802
+    ],
+    "W3 contam30": [
+     0.013325,
+     0.9012122676106644
+    ]
+   }
+  },
+  {
+   "name": "basic  ramp=(-0.25,+0.05) pi_min=0.10",
+   "spec": {
+    "name": "basic  ramp=(-0.25,+0.05) pi_min=0.10",
+    "policy": "thermostat",
+    "cfg": {
+     "m_lo": -0.25,
+     "m_hi": 0.05,
+     "pi_min": 0.1
+    },
+    "default": false
+   },
+   "viol": 0.10537499999999998,
+   "viol_w4": 0.30079999999999996,
+   "viol_contam": 0.005291666666666667,
+   "cost": 0.17505370728798975,
+   "cost_benign": 0.12430695638802547,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8756930436119745
+    ],
+    "W2 atrophy": [
+     0.013283333333333334,
+     0.8361346207019862
+    ],
+    "W3 bifurcated": [
+     0.0020416666666666665,
+     0.8447625174308289
+    ],
+    "W4 severe atrophy": [
+     0.30079999999999996,
+     0.7431949891032512
+    ],
+    "W3 contam30": [
+     0.005291666666666667,
+     0.8800610389606863
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(+0.05,+0.30) sent=0.01 drift=off",
+   "spec": {
+    "name": "robust ramp=(+0.05,+0.30) sent=0.01 drift=off",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": 0.05,
+     "m_hi": 0.3,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": 0.0,
+    "wide_sd": 0.047,
+    "default": false
+   },
+   "viol": 0.012272222222222224,
+   "viol_w4": 0.036658333333333334,
+   "viol_contam": 0.0,
+   "cost": 0.32092177157456825,
+   "cost_benign": 0.2905675591632466,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7094324408367534
+    ],
+    "W2 atrophy": [
+     0.00015833333333333335,
+     0.6779058256456149
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6842718164791847
+    ],
+    "W4 severe atrophy": [
+     0.036658333333333334,
+     0.6447028307401741
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7117974411772754
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(+0.05,+0.30) sent=0.01 drift=std",
+   "spec": {
+    "name": "robust ramp=(+0.05,+0.30) sent=0.01 drift=std",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": 0.05,
+     "m_hi": 0.3,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": -0.04,
+    "wide_sd": 0.08,
+    "default": false
+   },
+   "viol": 0.001225,
+   "viol_w4": 0.003675,
+   "viol_contam": 0.0,
+   "cost": 0.363251248071611,
+   "cost_benign": 0.3492512901579824,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6507487098420176
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6358302798237545
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6374298347823715
+    ],
+    "W4 severe atrophy": [
+     0.003675,
+     0.6229861832654127
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6508989053182941
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(+0.05,+0.30) sent=0.01 drift=strong",
+   "spec": {
+    "name": "robust ramp=(+0.05,+0.30) sent=0.01 drift=strong",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": 0.05,
+     "m_hi": 0.3,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": -0.08,
+    "wide_sd": 0.12,
+    "default": false
+   },
+   "viol": 0.0005583333333333333,
+   "viol_w4": 0.0016749999999999998,
+   "viol_contam": 0.0,
+   "cost": 0.37562025736009974,
+   "cost_benign": 0.36706137264075767,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6329386273592423
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6239161422398156
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6237537365672774
+    ],
+    "W4 severe atrophy": [
+     0.0016749999999999998,
+     0.6169104643932656
+    ],
+    "W3 contam30": [
+     0.0,
+     0.633861706205723
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(+0.05,+0.30) sent=0.03 drift=off",
+   "spec": {
+    "name": "robust ramp=(+0.05,+0.30) sent=0.03 drift=off",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": 0.05,
+     "m_hi": 0.3,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": 0.0,
+    "wide_sd": 0.047,
+    "default": false
+   },
+   "viol": 0.014263888888888888,
+   "viol_w4": 0.04273333333333333,
+   "viol_contam": 0.0,
+   "cost": 0.31460511860266316,
+   "cost_benign": 0.2825961529069878,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7174038470930122
+    ],
+    "W2 atrophy": [
+     5.833333333333333e-05,
+     0.6838849265835252
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6917385005703478
+    ],
+    "W4 severe atrophy": [
+     0.04273333333333333,
+     0.6485522513424624
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7160457746760306
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(+0.05,+0.30) sent=0.03 drift=std",
+   "spec": {
+    "name": "robust ramp=(+0.05,+0.30) sent=0.03 drift=std",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": 0.05,
+     "m_hi": 0.3,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": -0.04,
+    "wide_sd": 0.08,
+    "default": false
+   },
+   "viol": 0.0014027777777777777,
+   "viol_w4": 0.004208333333333333,
+   "viol_contam": 0.0,
+   "cost": 0.35940633730923643,
+   "cost_benign": 0.34368326387724324,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6563167361227568
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6394889073548378
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6421384823226135
+    ],
+    "W4 severe atrophy": [
+     0.004208333333333333,
+     0.6244305249628461
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6535315363564991
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(+0.05,+0.30) sent=0.03 drift=strong",
+   "spec": {
+    "name": "robust ramp=(+0.05,+0.30) sent=0.03 drift=strong",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": 0.05,
+     "m_hi": 0.3,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": -0.08,
+    "wide_sd": 0.12,
+    "default": false
+   },
+   "viol": 0.00045555555555555556,
+   "viol_w4": 0.0013666666666666666,
+   "viol_contam": 0.0,
+   "cost": 0.3727906786293279,
+   "cost_benign": 0.3626634429779799,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6373365570220201
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6267504161745612
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6269378304886115
+    ],
+    "W4 severe atrophy": [
+     0.0013666666666666666,
+     0.6178124817974956
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6366805713697314
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.05,+0.20) sent=0.01 drift=off",
+   "spec": {
+    "name": "robust ramp=(-0.05,+0.20) sent=0.01 drift=off",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.05,
+     "m_hi": 0.2,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": 0.0,
+    "wide_sd": 0.047,
+    "default": false
+   },
+   "viol": 0.03757777777777777,
+   "viol_w4": 0.11078333333333333,
+   "viol_contam": 0.00045,
+   "cost": 0.25914966872755063,
+   "cost_benign": 0.20416487574970477,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7958351242502952
+    ],
+    "W2 atrophy": [
+     0.00195,
+     0.7413463083288578
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7531504838085881
+    ],
+    "W4 severe atrophy": [
+     0.11078333333333333,
+     0.6730694087020566
+    ],
+    "W3 contam30": [
+     0.00045,
+     0.7813740067986723
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.05,+0.20) sent=0.01 drift=std",
+   "spec": {
+    "name": "robust ramp=(-0.05,+0.20) sent=0.01 drift=std",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.05,
+     "m_hi": 0.2,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": -0.04,
+    "wide_sd": 0.08,
+    "default": false
+   },
+   "viol": 0.003783333333333333,
+   "viol_w4": 0.011349999999999999,
+   "viol_contam": 0.0,
+   "cost": 0.33303335880507745,
+   "cost_benign": 0.3083417831361057,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6916582168638943
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6665186378173309
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6702767672766499
+    ],
+    "W4 severe atrophy": [
+     0.011349999999999999,
+     0.6394129428218149
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6827512622324031
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.05,+0.20) sent=0.01 drift=strong",
+   "spec": {
+    "name": "robust ramp=(-0.05,+0.20) sent=0.01 drift=strong",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.05,
+     "m_hi": 0.2,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": -0.08,
+    "wide_sd": 0.12,
+    "default": false
+   },
+   "viol": 0.0014277777777777778,
+   "viol_w4": 0.0042833333333333334,
+   "viol_contam": 0.0,
+   "cost": 0.3517516644210219,
+   "cost_benign": 0.3353194331997815,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6646805668002185
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6477586394430748
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6493474583149245
+    ],
+    "W4 severe atrophy": [
+     0.0042833333333333334,
+     0.6312066777576943
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6579467790201401
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.05,+0.20) sent=0.03 drift=off",
+   "spec": {
+    "name": "robust ramp=(-0.05,+0.20) sent=0.03 drift=off",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.05,
+     "m_hi": 0.2,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": 0.0,
+    "wide_sd": 0.047,
+    "default": false
+   },
+   "viol": 0.03834722222222223,
+   "viol_w4": 0.11304166666666668,
+   "viol_contam": 0.000475,
+   "cost": 0.2556419975805613,
+   "cost_benign": 0.20062638498846297,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.799373615011537
+    ],
+    "W2 atrophy": [
+     0.0017083333333333334,
+     0.7462206098818325
+    ],
+    "W3 bifurcated": [
+     0.0002916666666666667,
+     0.7562274950717185
+    ],
+    "W4 severe atrophy": [
+     0.11304166666666668,
+     0.6756102897126668
+    ],
+    "W3 contam30": [
+     0.000475,
+     0.7822742442769697
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.05,+0.20) sent=0.03 drift=std",
+   "spec": {
+    "name": "robust ramp=(-0.05,+0.20) sent=0.03 drift=std",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.05,
+     "m_hi": 0.2,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": -0.04,
+    "wide_sd": 0.08,
+    "default": true
+   },
+   "viol": 0.004583333333333333,
+   "viol_w4": 0.01375,
+   "viol_contam": 0.0,
+   "cost": 0.3292079457682764,
+   "cost_benign": 0.3019054866598694,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6980945133401306
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6696218345261864
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6750623074627775
+    ],
+    "W4 severe atrophy": [
+     0.01375,
+     0.6403895615977999
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6867058281361214
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.05,+0.20) sent=0.03 drift=strong",
+   "spec": {
+    "name": "robust ramp=(-0.05,+0.20) sent=0.03 drift=strong",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.05,
+     "m_hi": 0.2,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": -0.08,
+    "wide_sd": 0.12,
+    "default": false
+   },
+   "viol": 0.0013388888888888888,
+   "viol_w4": 0.004016666666666667,
+   "viol_contam": 0.0,
+   "cost": 0.3490523471014755,
+   "cost_benign": 0.3312625546292194,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6687374453707806
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6503227660447342
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6527341004455398
+    ],
+    "W4 severe atrophy": [
+     0.004016666666666667,
+     0.6319962997330434
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6616515301408644
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.15,+0.10) sent=0.01 drift=off",
+   "spec": {
+    "name": "robust ramp=(-0.15,+0.10) sent=0.01 drift=off",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.15,
+     "m_hi": 0.1,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": 0.0,
+    "wide_sd": 0.047,
+    "default": false
+   },
+   "viol": 0.07774444444444444,
+   "viol_w4": 0.22436666666666666,
+   "viol_contam": 0.0019416666666666666,
+   "cost": 0.2058687439160254,
+   "cost_benign": 0.14334584594559296,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.856654154054407
+    ],
+    "W2 atrophy": [
+     0.008366666666666666,
+     0.7993393271765652
+    ],
+    "W3 bifurcated": [
+     0.0005,
+     0.8131495316853089
+    ],
+    "W4 severe atrophy": [
+     0.22436666666666666,
+     0.707382011419617
+    ],
+    "W3 contam30": [
+     0.0019416666666666666,
+     0.8341779573670465
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.15,+0.10) sent=0.01 drift=std",
+   "spec": {
+    "name": "robust ramp=(-0.15,+0.10) sent=0.01 drift=std",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.15,
+     "m_hi": 0.1,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": -0.04,
+    "wide_sd": 0.08,
+    "default": false
+   },
+   "viol": 0.011830555555555554,
+   "viol_w4": 0.035491666666666664,
+   "viol_contam": 0.0,
+   "cost": 0.29980750904895215,
+   "cost_benign": 0.2623845425269986,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7376154574730014
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6990892402274191
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7071850920999909
+    ],
+    "W4 severe atrophy": [
+     0.035491666666666664,
+     0.65688017400378
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7186933936692796
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.15,+0.10) sent=0.01 drift=strong",
+   "spec": {
+    "name": "robust ramp=(-0.15,+0.10) sent=0.01 drift=strong",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.15,
+     "m_hi": 0.1,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": -0.08,
+    "wide_sd": 0.12,
+    "default": false
+   },
+   "viol": 0.004058333333333333,
+   "viol_w4": 0.012174999999999998,
+   "viol_contam": 0.0,
+   "cost": 0.3258157792333738,
+   "cost_benign": 0.3007939840085081,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6992060159914919
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6727529045694558
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6784453425550152
+    ],
+    "W4 severe atrophy": [
+     0.012174999999999998,
+     0.6463326199505419
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6848199285641483
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.15,+0.10) sent=0.03 drift=off",
+   "spec": {
+    "name": "robust ramp=(-0.15,+0.10) sent=0.03 drift=off",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.15,
+     "m_hi": 0.1,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": 0.0,
+    "wide_sd": 0.047,
+    "default": false
+   },
+   "viol": 0.07691388888888889,
+   "viol_w4": 0.22328333333333333,
+   "viol_contam": 0.001325,
+   "cost": 0.2062450873006394,
+   "cost_benign": 0.14494772465725347,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8550522753427465
+    ],
+    "W2 atrophy": [
+     0.006816666666666666,
+     0.7994575725062469
+    ],
+    "W3 bifurcated": [
+     0.0006416666666666667,
+     0.8123236792089814
+    ],
+    "W4 severe atrophy": [
+     0.22328333333333333,
+     0.7081861237394673
+    ],
+    "W3 contam30": [
+     0.001325,
+     0.833272722533336
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.15,+0.10) sent=0.03 drift=std",
+   "spec": {
+    "name": "robust ramp=(-0.15,+0.10) sent=0.03 drift=std",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.15,
+     "m_hi": 0.1,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": -0.04,
+    "wide_sd": 0.08,
+    "default": false
+   },
+   "viol": 0.013441666666666666,
+   "viol_w4": 0.040325,
+   "viol_contam": 0.0,
+   "cost": 0.29643944615992224,
+   "cost_benign": 0.25684875334764157,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7431512466523584
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.7021552789010519
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7103466529745983
+    ],
+    "W4 severe atrophy": [
+     0.040325,
+     0.6585890368323027
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7215673983762692
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.15,+0.10) sent=0.03 drift=strong",
+   "spec": {
+    "name": "robust ramp=(-0.15,+0.10) sent=0.03 drift=strong",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.15,
+     "m_hi": 0.1,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": -0.08,
+    "wide_sd": 0.12,
+    "default": false
+   },
+   "viol": 0.004508333333333333,
+   "viol_w4": 0.013524999999999999,
+   "viol_contam": 0.0,
+   "cost": 0.3234911154290393,
+   "cost_benign": 0.2972501006070625,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7027498993929375
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6751616960755749
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6807838287918357
+    ],
+    "W4 severe atrophy": [
+     0.013524999999999999,
+     0.6473401140234949
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6874985908719908
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.25,+0.05) sent=0.01 drift=off",
+   "spec": {
+    "name": "robust ramp=(-0.25,+0.05) sent=0.01 drift=off",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.25,
+     "m_hi": 0.05,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": 0.0,
+    "wide_sd": 0.047,
+    "default": false
+   },
+   "viol": 0.10024444444444446,
+   "viol_w4": 0.28700000000000003,
+   "viol_contam": 0.002533333333333333,
+   "cost": 0.18312059683335202,
+   "cost_benign": 0.124983977613627,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.875016022386373
+    ],
+    "W2 atrophy": [
+     0.012325,
+     0.8253976667252415
+    ],
+    "W3 bifurcated": [
+     0.0014083333333333335,
+     0.8374237410269147
+    ],
+    "W4 severe atrophy": [
+     0.28700000000000003,
+     0.7296801825280628
+    ],
+    "W3 contam30": [
+     0.002533333333333333,
+     0.8528106575172923
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.25,+0.05) sent=0.01 drift=std",
+   "spec": {
+    "name": "robust ramp=(-0.25,+0.05) sent=0.01 drift=std",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.25,
+     "m_hi": 0.05,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": -0.04,
+    "wide_sd": 0.08,
+    "default": false
+   },
+   "viol": 0.022097222222222223,
+   "viol_w4": 0.06629166666666667,
+   "viol_contam": 0.0,
+   "cost": 0.27747062342784945,
+   "cost_benign": 0.2352541780037537,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7647458219962463
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.7225006712213611
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7307075639250132
+    ],
+    "W4 severe atrophy": [
+     0.06629166666666667,
+     0.6721634491459818
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7407450849752939
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.25,+0.05) sent=0.01 drift=strong",
+   "spec": {
+    "name": "robust ramp=(-0.25,+0.05) sent=0.01 drift=strong",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.25,
+     "m_hi": 0.05,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": -0.08,
+    "wide_sd": 0.12,
+    "default": false
+   },
+   "viol": 0.007944444444444445,
+   "viol_w4": 0.023833333333333335,
+   "viol_contam": 0.0,
+   "cost": 0.30726645911637607,
+   "cost_benign": 0.2777830005891726,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7222169994108274
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6922330610135435
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6980831271301733
+    ],
+    "W4 severe atrophy": [
+     0.023833333333333335,
+     0.6584009759799514
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7033901302368415
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.25,+0.05) sent=0.03 drift=off",
+   "spec": {
+    "name": "robust ramp=(-0.25,+0.05) sent=0.03 drift=off",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.25,
+     "m_hi": 0.05,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": 0.0,
+    "wide_sd": 0.047,
+    "default": false
+   },
+   "viol": 0.09638333333333333,
+   "viol_w4": 0.2780916666666667,
+   "viol_contam": 0.0016583333333333333,
+   "cost": 0.1850070443428451,
+   "cost_benign": 0.12825770216612464,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8717422978338754
+    ],
+    "W2 atrophy": [
+     0.009758333333333334,
+     0.8231122628467951
+    ],
+    "W3 bifurcated": [
+     0.0013,
+     0.835443144191904
+    ],
+    "W4 severe atrophy": [
+     0.2780916666666667,
+     0.7296741177560453
+    ],
+    "W3 contam30": [
+     0.0016583333333333333,
+     0.8504394005427124
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.25,+0.05) sent=0.03 drift=std",
+   "spec": {
+    "name": "robust ramp=(-0.25,+0.05) sent=0.03 drift=std",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.25,
+     "m_hi": 0.05,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": -0.04,
+    "wide_sd": 0.08,
+    "default": false
+   },
+   "viol": 0.023661111111111115,
+   "viol_w4": 0.07098333333333334,
+   "viol_contam": 0.0,
+   "cost": 0.2745455395949964,
+   "cost_benign": 0.23086871152452026,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7691312884754797
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.7249591886698721
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7340021321718847
+    ],
+    "W4 severe atrophy": [
+     0.07098333333333334,
+     0.6737252323027781
+    ],
+    "W3 contam30": [
+     0.0,
+     0.744059584817981
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.25,+0.05) sent=0.03 drift=strong",
+   "spec": {
+    "name": "robust ramp=(-0.25,+0.05) sent=0.03 drift=strong",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.25,
+     "m_hi": 0.05,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": -0.08,
+    "wide_sd": 0.12,
+    "default": false
+   },
+   "viol": 0.009025,
+   "viol_w4": 0.027075000000000002,
+   "viol_contam": 0.0,
+   "cost": 0.30471734700419517,
+   "cost_benign": 0.2737708097608522,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7262291902391478
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6946593201431378
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7008323350421695
+    ],
+    "W4 severe atrophy": [
+     0.027075000000000002,
+     0.6594097665587646
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7067026877641174
+    ]
+   }
+  },
+  {
+   "name": "always_on",
+   "spec": {
+    "name": "always_on",
+    "policy": "always_on"
+   },
+   "viol": 0.2895138888888889,
+   "viol_w4": 0.641,
+   "viol_contam": 0.06473333333333334,
+   "cost": 0.0,
+   "cost_benign": 0.0,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     1.0
+    ],
+    "W2 atrophy": [
+     0.16280833333333333,
+     1.0
+    ],
+    "W3 bifurcated": [
+     0.06473333333333334,
+     1.0
+    ],
+    "W4 severe atrophy": [
+     0.641,
+     1.0
+    ],
+    "W3 contam30": [
+     0.06473333333333334,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "never_ai",
+   "spec": {
+    "name": "never_ai",
+    "policy": "never_ai"
+   },
+   "viol": 0.0,
+   "viol_w4": 0.0,
+   "viol_contam": 0.0,
+   "cost": 0.4819805660105987,
+   "cost_benign": 0.5026939313031173,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.4973060686968826
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.5187405715025322
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.5122395106403961
+    ],
+    "W4 severe atrophy": [
+     0.0,
+     0.5437915851177941
+    ],
+    "W3 contam30": [
+     0.0,
+     0.5122395106403961
+    ]
+   }
+  },
+  {
+   "name": "fixed_drills 1/2",
+   "spec": {
+    "name": "fixed_drills 1/2",
+    "policy": "fixed_drills",
+    "arg": 2
+   },
+   "viol": 0.07138333333333334,
+   "viol_w4": 0.21415,
+   "viol_contam": 0.0,
+   "cost": 0.24109511641360903,
+   "cost_benign": 0.2376546262492346,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7623453737507654
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.7606787007285601
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7593890547527349
+    ],
+    "W4 severe atrophy": [
+     0.21415,
+     0.7532064051135032
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7593890547527349
+    ]
+   }
+  },
+  {
+   "name": "fixed_drills 1/3",
+   "spec": {
+    "name": "fixed_drills 1/3",
+    "policy": "fixed_drills",
+    "arg": 3
+   },
+   "viol": 0.1373111111111111,
+   "viol_w4": 0.402775,
+   "viol_contam": 0.0,
+   "cost": 0.16374653603094225,
+   "cost_benign": 0.15849405830167296,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.841505941698327
+    ],
+    "W2 atrophy": [
+     0.009158333333333334,
+     0.8376604265773488
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.8371918976194304
+    ],
+    "W4 severe atrophy": [
+     0.402775,
+     0.828655589981125
+    ],
+    "W3 contam30": [
+     0.0,
+     0.8371918976194304
+    ]
+   }
+  },
+  {
+   "name": "fixed_drills 1/5",
+   "spec": {
+    "name": "fixed_drills 1/5",
+    "policy": "fixed_drills",
+    "arg": 5
+   },
+   "viol": 0.18895555555555554,
+   "viol_w4": 0.5166083333333333,
+   "viol_contam": 0.005008333333333333,
+   "cost": 0.09979078828330745,
+   "cost_benign": 0.095580149760083,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.904419850239917
+    ],
+    "W2 atrophy": [
+     0.04525,
+     0.9010777931253375
+    ],
+    "W3 bifurcated": [
+     0.005008333333333333,
+     0.9012054789812167
+    ],
+    "W4 severe atrophy": [
+     0.5166083333333333,
+     0.8941337245202989
+    ],
+    "W3 contam30": [
+     0.005008333333333333,
+     0.9012054789812167
+    ]
+   }
+  },
+  {
+   "name": "fixed_drills 1/10",
+   "spec": {
+    "name": "fixed_drills 1/10",
+    "policy": "fixed_drills",
+    "arg": 10
+   },
+   "viol": 0.236,
+   "viol_w4": 0.584125,
+   "viol_contam": 0.029608333333333334,
+   "cost": 0.05047244000134388,
+   "cost_benign": 0.04792303742285753,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9520769625771425
+    ],
+    "W2 atrophy": [
+     0.09426666666666667,
+     0.9499278427408162
+    ],
+    "W3 bifurcated": [
+     0.029608333333333334,
+     0.950075749364105
+    ],
+    "W4 severe atrophy": [
+     0.584125,
+     0.9460296853125605
+    ],
+    "W3 contam30": [
+     0.029608333333333334,
+     0.950075749364105
+    ]
+   }
+  },
+  {
+   "name": "fixed_drills 1/20",
+   "spec": {
+    "name": "fixed_drills 1/20",
+    "policy": "fixed_drills",
+    "arg": 20
+   },
+   "viol": 0.26214999999999994,
+   "viol_w4": 0.6139083333333333,
+   "viol_contam": 0.04603333333333333,
+   "cost": 0.02528335998160358,
+   "cost_benign": 0.023932583539245766,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9760674164607542
+    ],
+    "W2 atrophy": [
+     0.12650833333333333,
+     0.9748653864196152
+    ],
+    "W3 bifurcated": [
+     0.04603333333333333,
+     0.9750245383118474
+    ],
+    "W4 severe atrophy": [
+     0.6139083333333333,
+     0.9729092188813685
+    ],
+    "W3 contam30": [
+     0.04603333333333333,
+     0.9750245383118474
+    ]
+   }
+  },
+  {
+   "name": "random p=0.05",
+   "spec": {
+    "name": "random p=0.05",
+    "policy": "random_10",
+    "arg": 0.05
+   },
+   "viol": 0.2626833333333333,
+   "viol_w4": 0.6146833333333332,
+   "viol_contam": 0.04645833333333334,
+   "cost": 0.02572041715616602,
+   "cost_benign": 0.024226716340022714,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9757732836599773
+    ],
+    "W2 atrophy": [
+     0.12690833333333335,
+     0.9745834417808449
+    ],
+    "W3 bifurcated": [
+     0.04645833333333334,
+     0.9745826585484574
+    ],
+    "W4 severe atrophy": [
+     0.6146833333333332,
+     0.9721789473860563
+    ],
+    "W3 contam30": [
+     0.04645833333333334,
+     0.9745826585484574
+    ]
+   }
+  },
+  {
+   "name": "random p=0.10",
+   "spec": {
+    "name": "random p=0.10",
+    "policy": "random_10",
+    "arg": 0.1
+   },
+   "viol": 0.2372388888888889,
+   "viol_w4": 0.5863583333333333,
+   "viol_contam": 0.029866666666666666,
+   "cost": 0.05036114050409579,
+   "cost_benign": 0.04748740989359912,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9525125901064009
+    ],
+    "W2 atrophy": [
+     0.09549166666666667,
+     0.9502153477739954
+    ],
+    "W3 bifurcated": [
+     0.029866666666666666,
+     0.9500375318014038
+    ],
+    "W4 severe atrophy": [
+     0.5863583333333333,
+     0.9457899683018169
+    ],
+    "W3 contam30": [
+     0.029866666666666666,
+     0.9500375318014038
+    ]
+   }
+  },
+  {
+   "name": "random p=0.20",
+   "spec": {
+    "name": "random p=0.20",
+    "policy": "random_10",
+    "arg": 0.2
+   },
+   "viol": 0.18963888888888888,
+   "viol_w4": 0.5181,
+   "viol_contam": 0.004975,
+   "cost": 0.09913637623325844,
+   "cost_benign": 0.09437022374392368,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9056297762560763
+    ],
+    "W2 atrophy": [
+     0.04584166666666667,
+     0.9017911288031095
+    ],
+    "W3 bifurcated": [
+     0.004975,
+     0.9015875582691736
+    ],
+    "W4 severe atrophy": [
+     0.5181,
+     0.8944460317386069
+    ],
+    "W3 contam30": [
+     0.004975,
+     0.9015875582691736
+    ]
+   }
+  },
+  {
+   "name": "random p=0.33",
+   "spec": {
+    "name": "random p=0.33",
+    "policy": "random_10",
+    "arg": 0.33
+   },
+   "viol": 0.1400583333333333,
+   "viol_w4": 0.40912499999999996,
+   "viol_contam": 0.0,
+   "cost": 0.16126479240382152,
+   "cost_benign": 0.1558046226330302,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8441953773669698
+    ],
+    "W2 atrophy": [
+     0.01105,
+     0.8400083050290033
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.8397197502918299
+    ],
+    "W4 severe atrophy": [
+     0.40912499999999996,
+     0.831017397696911
+    ],
+    "W3 contam30": [
+     0.0,
+     0.8397197502918299
+    ]
+   }
+  },
+  {
+   "name": "random p=0.50",
+   "spec": {
+    "name": "random p=0.50",
+    "policy": "random_10",
+    "arg": 0.5
+   },
+   "viol": 0.07178333333333332,
+   "viol_w4": 0.21534999999999999,
+   "viol_contam": 0.0,
+   "cost": 0.24068022253682642,
+   "cost_benign": 0.2369042720620287,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7630957279379713
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.7608968018968492
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7598774587409266
+    ],
+    "W4 severe atrophy": [
+     0.21534999999999999,
+     0.7534091212769471
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7598774587409266
+    ]
+   }
+  },
+  {
+   "name": "fixed_alpha a=0.90",
+   "spec": {
+    "name": "fixed_alpha a=0.90",
+    "policy": "fixed_alpha",
+    "arg": 0.9
+   },
+   "viol": 0.23706666666666665,
+   "viol_w4": 0.5864583333333333,
+   "viol_contam": 0.029741666666666666,
+   "cost": 0.06101143429086631,
+   "cost_benign": 0.05539228070094515,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9446077192990548
+    ],
+    "W2 atrophy": [
+     0.095,
+     0.9393721038972479
+    ],
+    "W3 bifurcated": [
+     0.029741666666666666,
+     0.9404304787062849
+    ],
+    "W4 severe atrophy": [
+     0.5864583333333333,
+     0.9315439609339471
+    ],
+    "W3 contam30": [
+     0.029741666666666666,
+     0.9404304787062849
+    ]
+   }
+  },
+  {
+   "name": "fixed_alpha a=0.75",
+   "spec": {
+    "name": "fixed_alpha a=0.75",
+    "policy": "fixed_alpha",
+    "arg": 0.75
+   },
+   "viol": 0.16970833333333335,
+   "viol_w4": 0.48041666666666666,
+   "viol_contam": 0.0005,
+   "cost": 0.14509739845561598,
+   "cost_benign": 0.13492336378335312,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8650766362166469
+    ],
+    "W2 atrophy": [
+     0.028208333333333335,
+     0.855913220251665
+    ],
+    "W3 bifurcated": [
+     0.0005,
+     0.857423832813247
+    ],
+    "W4 severe atrophy": [
+     0.48041666666666666,
+     0.8411967168959773
+    ],
+    "W3 contam30": [
+     0.0005,
+     0.857423832813247
+    ]
+   }
+  },
+  {
+   "name": "fixed_alpha a=0.60",
+   "spec": {
+    "name": "fixed_alpha a=0.60",
+    "policy": "fixed_alpha",
+    "arg": 0.6
+   },
+   "viol": 0.11375833333333334,
+   "viol_w4": 0.339175,
+   "viol_contam": 0.0,
+   "cost": 0.22076134138822368,
+   "cost_benign": 0.21027207232297418,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7897279276770258
+    ],
+    "W2 atrophy": [
+     0.0021,
+     0.7807557445135662
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.781713834206617
+    ],
+    "W4 severe atrophy": [
+     0.339175,
+     0.7647571280498962
+    ],
+    "W3 contam30": [
+     0.0,
+     0.781713834206617
+    ]
+   }
+  },
+  {
+   "name": "fixed_alpha a=0.45",
+   "spec": {
+    "name": "fixed_alpha a=0.45",
+    "policy": "fixed_alpha",
+    "arg": 0.45
+   },
+   "viol": 0.04866111111111112,
+   "viol_w4": 0.14598333333333335,
+   "viol_contam": 0.0,
+   "cost": 0.2886913668809774,
+   "cost_benign": 0.2815336045330158,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7184663954669842
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.7130518193979604
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7127984414648154
+    ],
+    "W4 severe atrophy": [
+     0.14598333333333335,
+     0.7009178761463302
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7127984414648154
+    ]
+   }
+  },
+  {
+   "name": "fixed_alpha a=0.30",
+   "spec": {
+    "name": "fixed_alpha a=0.30",
+    "policy": "fixed_alpha",
+    "arg": 0.3
+   },
+   "viol": 0.005855555555555556,
+   "viol_w4": 0.017566666666666668,
+   "viol_contam": 0.0,
+   "cost": 0.34969470237825373,
+   "cost_benign": 0.3488007041758041,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6511992958241959
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6519217922570804
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6500250792835389
+    ],
+    "W4 severe atrophy": [
+     0.017566666666666668,
+     0.6480750231221699
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6500250792835389
+    ]
+   }
+  }
+ ],
+ "validation": [
+  {
+   "name": "basic  ramp=(-0.25,+0.05) pi_min=0.04",
+   "spec": {
+    "name": "basic  ramp=(-0.25,+0.05) pi_min=0.04",
+    "policy": "thermostat",
+    "cfg": {
+     "m_lo": -0.25,
+     "m_hi": 0.05,
+     "pi_min": 0.04
+    },
+    "default": false
+   },
+   "viol": 0.14528749999999999,
+   "viol_w4": 0.3709854166666666,
+   "viol_contam": 0.04360833333333333,
+   "cost": 0.17107527157998292,
+   "cost_benign": 0.10021449464540222,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8997855053545978
+    ],
+    "W2 atrophy": [
+     0.05170625,
+     0.8371090824282507
+    ],
+    "W3 bifurcated": [
+     0.013170833333333335,
+     0.8592755505410437
+    ],
+    "W4 severe atrophy": [
+     0.3709854166666666,
+     0.7195287753561761
+    ],
+    "W3 contam30": [
+     0.04360833333333333,
+     0.9023619721405104
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.15,+0.10) sent=0.01 drift=off",
+   "spec": {
+    "name": "robust ramp=(-0.15,+0.10) sent=0.01 drift=off",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.15,
+     "m_hi": 0.1,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": 0.0,
+    "wide_sd": 0.047,
+    "default": false
+   },
+   "viol": 0.08294444444444445,
+   "viol_w4": 0.22143333333333334,
+   "viol_contam": 0.007995833333333334,
+   "cost": 0.2078844969116298,
+   "cost_benign": 0.1351157173029387,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8648842826970613
+    ],
+    "W2 atrophy": [
+     0.022570833333333335,
+     0.7917856717241603
+    ],
+    "W3 bifurcated": [
+     0.0048291666666666665,
+     0.8173192736125143
+    ],
+    "W4 severe atrophy": [
+     0.22143333333333334,
+     0.694472784319745
+    ],
+    "W3 contam30": [
+     0.007995833333333334,
+     0.8322163054491369
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.15,+0.10) sent=0.01 drift=std",
+   "spec": {
+    "name": "robust ramp=(-0.15,+0.10) sent=0.01 drift=std",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.15,
+     "m_hi": 0.1,
+     "sentinel_rate": 0.01
+    },
+    "wide_shift": -0.04,
+    "wide_sd": 0.08,
+    "default": false
+   },
+   "viol": 0.012581944444444444,
+   "viol_w4": 0.03762708333333333,
+   "viol_contam": 0.0,
+   "cost": 0.2865400815711301,
+   "cost_benign": 0.24279969098327436,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7572003090167256
+    ],
+    "W2 atrophy": [
+     0.00011875,
+     0.7117029726040215
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7217157813994809
+    ],
+    "W4 severe atrophy": [
+     0.03762708333333333,
+     0.6632206106952514
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7280343114381447
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(+0.05,+0.30) sent=0.03 drift=strong",
+   "spec": {
+    "name": "robust ramp=(+0.05,+0.30) sent=0.03 drift=strong",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": 0.05,
+     "m_hi": 0.3,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": -0.08,
+    "wide_sd": 0.12,
+    "default": false
+   },
+   "viol": 0.0009222222222222223,
+   "viol_w4": 0.002766666666666667,
+   "viol_contam": 0.0,
+   "cost": 0.3497805811267256,
+   "cost_benign": 0.3356611671077939,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6643388328922061
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6504109102639587
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6504544145295025
+    ],
+    "W4 severe atrophy": [
+     0.002766666666666667,
+     0.6356735178074304
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6563486590112948
+    ]
+   }
+  },
+  {
+   "name": "basic  ramp=(-0.05,+0.20) pi_min=0.04",
+   "spec": {
+    "name": "basic  ramp=(-0.05,+0.20) pi_min=0.04",
+    "policy": "thermostat",
+    "cfg": {
+     "m_lo": -0.05,
+     "m_hi": 0.2,
+     "pi_min": 0.04
+    },
+    "default": true
+   },
+   "viol": 0.06979375,
+   "viol_w4": 0.18454791666666667,
+   "viol_contam": 0.025241666666666666,
+   "cost": 0.21887771143949097,
+   "cost_benign": 0.14842767627015385,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8515723237298461
+    ],
+    "W2 atrophy": [
+     0.019854166666666666,
+     0.7806557847484874
+    ],
+    "W3 bifurcated": [
+     0.0049791666666666665,
+     0.8045805020705478
+    ],
+    "W4 severe atrophy": [
+     0.18454791666666667,
+     0.6876805436931547
+    ],
+    "W3 contam30": [
+     0.025241666666666666,
+     0.8701981753004562
+    ]
+   }
+  },
+  {
+   "name": "robust ramp=(-0.05,+0.20) sent=0.03 drift=std",
+   "spec": {
+    "name": "robust ramp=(-0.05,+0.20) sent=0.03 drift=std",
+    "policy": "thermostat_robust",
+    "cfg": {
+     "m_lo": -0.05,
+     "m_hi": 0.2,
+     "sentinel_rate": 0.03
+    },
+    "wide_shift": -0.04,
+    "wide_sd": 0.08,
+    "default": true
+   },
+   "viol": 0.0061381944444444435,
+   "viol_w4": 0.01841458333333333,
+   "viol_contam": 0.0,
+   "cost": 0.31140013622248475,
+   "cost_benign": 0.2781444358371489,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7218555641628511
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6876897064506601
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6934035093993977
+    ],
+    "W4 severe atrophy": [
+     0.01841458333333333,
+     0.6514506750971523
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7014392155123331
+    ]
+   }
+  },
+  {
+   "name": "always_on",
+   "spec": {
+    "name": "always_on",
+    "policy": "always_on"
+   },
+   "viol": 0.3805618055555555,
+   "viol_w4": 0.7269854166666666,
+   "viol_contam": 0.12226875,
+   "cost": 0.0,
+   "cost_benign": 0.0,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     1.0
+    ],
+    "W2 atrophy": [
+     0.29243125000000003,
+     1.0
+    ],
+    "W3 bifurcated": [
+     0.12226875,
+     1.0
+    ],
+    "W4 severe atrophy": [
+     0.7269854166666666,
+     1.0
+    ],
+    "W3 contam30": [
+     0.12226875,
+     1.0
+    ]
+   }
+  },
+  {
+   "name": "never_ai",
+   "spec": {
+    "name": "never_ai",
+    "policy": "never_ai"
+   },
+   "viol": 0.0,
+   "viol_w4": 0.0,
+   "viol_contam": 0.0,
+   "cost": 0.4617374833397029,
+   "cost_benign": 0.48968256323511505,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.510317436764885
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.5404093291149753
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.5304625968739453
+    ],
+    "W4 severe atrophy": [
+     0.0,
+     0.571860703887383
+    ],
+    "W3 contam30": [
+     0.0,
+     0.5304625968739453
+    ]
+   }
+  },
+  {
+   "name": "fixed_drills 1/2",
+   "spec": {
+    "name": "fixed_drills 1/2",
+    "policy": "fixed_drills",
+    "arg": 2
+   },
+   "viol": 0.10563125000000001,
+   "viol_w4": 0.31498333333333334,
+   "viol_contam": 0.0,
+   "cost": 0.23652421679562985,
+   "cost_benign": 0.23107654792157495,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.768923452078425
+    ],
+    "W2 atrophy": [
+     0.0019104166666666668,
+     0.7670223230018722
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7649256941583911
+    ],
+    "W4 severe atrophy": [
+     0.31498333333333334,
+     0.7530316635787923
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7649256941583911
+    ]
+   }
+  },
+  {
+   "name": "fixed_drills 1/3",
+   "spec": {
+    "name": "fixed_drills 1/3",
+    "policy": "fixed_drills",
+    "arg": 3
+   },
+   "viol": 0.18566458333333333,
+   "viol_w4": 0.5161291666666666,
+   "viol_contam": 0.0008,
+   "cost": 0.16316560623357934,
+   "cost_benign": 0.15549488454770488,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8445051154522951
+    ],
+    "W2 atrophy": [
+     0.04006458333333333,
+     0.8397852036250456
+    ],
+    "W3 bifurcated": [
+     0.0008,
+     0.8388949047651867
+    ],
+    "W4 severe atrophy": [
+     0.5161291666666666,
+     0.8241523512231552
+    ],
+    "W3 contam30": [
+     0.0008,
+     0.8388949047651867
+    ]
+   }
+  },
+  {
+   "name": "fixed_drills 1/5",
+   "spec": {
+    "name": "fixed_drills 1/5",
+    "policy": "fixed_drills",
+    "arg": 5
+   },
+   "viol": 0.25883194444444446,
+   "viol_w4": 0.6255625,
+   "viol_contam": 0.02866666666666667,
+   "cost": 0.09951484176262282,
+   "cost_benign": 0.09312563209665858,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9068743679033414
+    ],
+    "W2 atrophy": [
+     0.12226666666666668,
+     0.9022475451319432
+    ],
+    "W3 bifurcated": [
+     0.02866666666666667,
+     0.9021751100848313
+    ],
+    "W4 severe atrophy": [
+     0.6255625,
+     0.890643609829393
+    ],
+    "W3 contam30": [
+     0.02866666666666667,
+     0.9021751100848313
+    ]
+   }
+  },
+  {
+   "name": "fixed_drills 1/10",
+   "spec": {
+    "name": "fixed_drills 1/10",
+    "policy": "fixed_drills",
+    "arg": 10
+   },
+   "viol": 0.31983680555555555,
+   "viol_w4": 0.6817187499999999,
+   "viol_contam": 0.07292708333333332,
+   "cost": 0.05039621540915418,
+   "cost_benign": 0.046714010249438775,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9532859897505612
+    ],
+    "W2 atrophy": [
+     0.20486458333333335,
+     0.9505420786890966
+    ],
+    "W3 bifurcated": [
+     0.07292708333333332,
+     0.9506549447414495
+    ],
+    "W4 severe atrophy": [
+     0.6817187499999999,
+     0.9439321251822758
+    ],
+    "W3 contam30": [
+     0.07292708333333332,
+     0.9506549447414495
+    ]
+   }
+  },
+  {
+   "name": "fixed_drills 1/20",
+   "spec": {
+    "name": "fixed_drills 1/20",
+    "policy": "fixed_drills",
+    "arg": 20
+   },
+   "viol": 0.35017569444444446,
+   "viol_w4": 0.7045979166666667,
+   "viol_contam": 0.09776041666666667,
+   "cost": 0.025251387840953265,
+   "cost_benign": 0.02337452294563569,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9766254770543643
+    ],
+    "W2 atrophy": [
+     0.24816875000000002,
+     0.9751800757416799
+    ],
+    "W3 bifurcated": [
+     0.09776041666666667,
+     0.9753293867463091
+    ],
+    "W4 severe atrophy": [
+     0.7045979166666667,
+     0.9718595090938337
+    ],
+    "W3 contam30": [
+     0.09776041666666667,
+     0.9753293867463091
+    ]
+   }
+  },
+  {
+   "name": "random p=0.05",
+   "spec": {
+    "name": "random p=0.05",
+    "policy": "random_10",
+    "arg": 0.05
+   },
+   "viol": 0.35194444444444445,
+   "viol_w4": 0.7067875,
+   "viol_contam": 0.09883333333333333,
+   "cost": 0.02537229403357033,
+   "cost_benign": 0.02318081366586211,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9768191863341379
+    ],
+    "W2 atrophy": [
+     0.2502125,
+     0.975056057366206
+    ],
+    "W3 bifurcated": [
+     0.09883333333333333,
+     0.9751694703507195
+    ],
+    "W4 severe atrophy": [
+     0.7067875,
+     0.9714661098146552
+    ],
+    "W3 contam30": [
+     0.09883333333333333,
+     0.9751694703507195
+    ]
+   }
+  },
+  {
+   "name": "random p=0.10",
+   "spec": {
+    "name": "random p=0.10",
+    "policy": "random_10",
+    "arg": 0.1
+   },
+   "viol": 0.32148611111111114,
+   "viol_w4": 0.6835041666666667,
+   "viol_contam": 0.07388333333333334,
+   "cost": 0.05069198656520035,
+   "cost_benign": 0.04663955883055804,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.953360441169442
+    ],
+    "W2 atrophy": [
+     0.20707083333333332,
+     0.950096316377886
+    ],
+    "W3 bifurcated": [
+     0.07388333333333334,
+     0.9503384398237452
+    ],
+    "W4 severe atrophy": [
+     0.6835041666666667,
+     0.9434368563681256
+    ],
+    "W3 contam30": [
+     0.07388333333333334,
+     0.9503384398237452
+    ]
+   }
+  },
+  {
+   "name": "random p=0.20",
+   "spec": {
+    "name": "random p=0.20",
+    "policy": "random_10",
+    "arg": 0.2
+   },
+   "viol": 0.2605645833333334,
+   "viol_w4": 0.6270645833333334,
+   "viol_contam": 0.029633333333333334,
+   "cost": 0.0994059701645208,
+   "cost_benign": 0.09274857918369639,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9072514208163036
+    ],
+    "W2 atrophy": [
+     0.12499583333333335,
+     0.902214842753204
+    ],
+    "W3 bifurcated": [
+     0.029633333333333334,
+     0.9023606976060486
+    ],
+    "W4 severe atrophy": [
+     0.6270645833333334,
+     0.8905491581663606
+    ],
+    "W3 contam30": [
+     0.029633333333333334,
+     0.9023606976060486
+    ]
+   }
+  },
+  {
+   "name": "random p=0.33",
+   "spec": {
+    "name": "random p=0.33",
+    "policy": "random_10",
+    "arg": 0.33
+   },
+   "viol": 0.18666736111111112,
+   "viol_w4": 0.5190666666666667,
+   "viol_contam": 0.0007229166666666667,
+   "cost": 0.1606356109473105,
+   "cost_benign": 0.15285284624915152,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8471471537508485
+    ],
+    "W2 atrophy": [
+     0.0402125,
+     0.8420266845848996
+    ],
+    "W3 bifurcated": [
+     0.0007229166666666667,
+     0.8414364898986656
+    ],
+    "W4 severe atrophy": [
+     0.5190666666666667,
+     0.8268472279763444
+    ],
+    "W3 contam30": [
+     0.0007229166666666667,
+     0.8414364898986656
+    ]
+   }
+  },
+  {
+   "name": "random p=0.50",
+   "spec": {
+    "name": "random p=0.50",
+    "policy": "random_10",
+    "arg": 0.5
+   },
+   "viol": 0.10563125,
+   "viol_w4": 0.31471041666666666,
+   "viol_contam": 0.0,
+   "cost": 0.2364193264824035,
+   "cost_benign": 0.23091503771370758,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7690849622862924
+    ],
+    "W2 atrophy": [
+     0.002183333333333333,
+     0.7671969089653197
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7650030596710535
+    ],
+    "W4 severe atrophy": [
+     0.31471041666666666,
+     0.7530377631477206
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7650030596710535
+    ]
+   }
+  },
+  {
+   "name": "fixed_alpha a=0.90",
+   "spec": {
+    "name": "fixed_alpha a=0.90",
+    "policy": "fixed_alpha",
+    "arg": 0.9
+   },
+   "viol": 0.3211145833333333,
+   "viol_w4": 0.6832604166666666,
+   "viol_contam": 0.07385208333333333,
+   "cost": 0.06154138910779594,
+   "cost_benign": 0.05379207155689014,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.9462079284431099
+    ],
+    "W2 atrophy": [
+     0.20623125,
+     0.9391085881111122
+    ],
+    "W3 bifurcated": [
+     0.07385208333333333,
+     0.9405630329335283
+    ],
+    "W4 severe atrophy": [
+     0.6832604166666666,
+     0.9279548940810658
+    ],
+    "W3 contam30": [
+     0.07385208333333333,
+     0.9405630329335283
+    ]
+   }
+  },
+  {
+   "name": "fixed_alpha a=0.75",
+   "spec": {
+    "name": "fixed_alpha a=0.75",
+    "policy": "fixed_alpha",
+    "arg": 0.75
+   },
+   "viol": 0.23092638888888886,
+   "viol_w4": 0.5912604166666666,
+   "viol_contam": 0.0137375,
+   "cost": 0.14518616442734633,
+   "cost_benign": 0.1310185010933006,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.8689814989066994
+    ],
+    "W2 atrophy": [
+     0.08778124999999999,
+     0.8567305526344288
+    ],
+    "W3 bifurcated": [
+     0.0137375,
+     0.8586318432875029
+    ],
+    "W4 severe atrophy": [
+     0.5912604166666666,
+     0.8349114474619833
+    ],
+    "W3 contam30": [
+     0.0137375,
+     0.8586318432875029
+    ]
+   }
+  },
+  {
+   "name": "fixed_alpha a=0.60",
+   "spec": {
+    "name": "fixed_alpha a=0.60",
+    "policy": "fixed_alpha",
+    "arg": 0.6
+   },
+   "viol": 0.15360486111111113,
+   "viol_w4": 0.4449541666666667,
+   "viol_contam": 0.0,
+   "cost": 0.2188525289789377,
+   "cost_benign": 0.2042078929956449,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7957921070043551
+    ],
+    "W2 atrophy": [
+     0.015860416666666665,
+     0.7842101790431465
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.7850893586903157
+    ],
+    "W4 severe atrophy": [
+     0.4449541666666667,
+     0.7594982393464318
+    ],
+    "W3 contam30": [
+     0.0,
+     0.7850893586903157
+    ]
+   }
+  },
+  {
+   "name": "fixed_alpha a=0.45",
+   "spec": {
+    "name": "fixed_alpha a=0.45",
+    "policy": "fixed_alpha",
+    "arg": 0.45
+   },
+   "viol": 0.08266388888888888,
+   "viol_w4": 0.24755416666666666,
+   "viol_contam": 0.0,
+   "cost": 0.28345607081019386,
+   "cost_benign": 0.27348729906468516,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.7265127009353148
+    ],
+    "W2 atrophy": [
+     0.0004375,
+     0.720261718628004
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.719243352702598
+    ],
+    "W4 severe atrophy": [
+     0.24755416666666666,
+     0.7001579444933079
+    ],
+    "W3 contam30": [
+     0.0,
+     0.719243352702598
+    ]
+   }
+  },
+  {
+   "name": "fixed_alpha a=0.30",
+   "spec": {
+    "name": "fixed_alpha a=0.30",
+    "policy": "fixed_alpha",
+    "arg": 0.3
+   },
+   "viol": 0.018991666666666667,
+   "viol_w4": 0.056975,
+   "viol_contam": 0.0,
+   "cost": 0.3401455137858642,
+   "cost_benign": 0.3389780550065278,
+   "per": {
+    "W1 benign (no atrophy)": [
+     0.0,
+     0.6610219449934722
+    ],
+    "W2 atrophy": [
+     0.0,
+     0.6634897414195616
+    ],
+    "W3 bifurcated": [
+     0.0,
+     0.6600831461238512
+    ],
+    "W4 severe atrophy": [
+     0.056975,
+     0.6548231123196584
+    ],
+    "W3 contam30": [
+     0.0,
+     0.6600831461238512
+    ]
+   }
+  }
+ ]
+}

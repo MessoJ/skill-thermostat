@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Python Practice Study</title>
+<style>
+  :root { --bg:#fafaf8; --fg:#1d1d1b; --mut:#6b6b66; --card:#fff; --line:#d9d9d2; --acc:#1f5fbf; --ok:#1b7f3b; --bad:#b3261e; --warn:#fff4d6; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#161615; --fg:#ecece8; --mut:#a0a09a; --card:#1f1f1d; --line:#3a3a36; --acc:#6ea2ff; --ok:#5ccf84; --bad:#ff8a80; --warn:#3a3217; } }
+  * { box-sizing:border-box }
+  body { margin:0; background:var(--bg); color:var(--fg); font:16px/1.5 system-ui,sans-serif }
+  main { max-width:860px; margin:0 auto; padding:16px }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; margin-bottom:14px }
+  h1 { font-size:1.3rem; margin:.2em 0 } h2 { font-size:1.05rem; margin:.2em 0 }
+  textarea { width:100%; font:14px/1.45 ui-monospace,Menlo,Consolas,monospace; background:var(--bg); color:var(--fg); border:1px solid var(--line); border-radius:8px; padding:10px }
+  #code { min-height:240px; tab-size:4 }
+  button { font:inherit; padding:8px 14px; border-radius:8px; border:1px solid var(--line); background:var(--card); color:var(--fg); cursor:pointer }
+  button.primary { background:var(--acc); color:#fff; border-color:var(--acc) }
+  button:disabled { opacity:.5; cursor:default }
+  .row { display:flex; gap:8px; flex-wrap:wrap; align-items:center }
+  .mut { color:var(--mut); font-size:.9rem }
+  .banner { background:var(--warn); border:1px solid var(--line); border-radius:8px; padding:8px 12px; margin-bottom:10px }
+  .ok { color:var(--ok) } .bad { color:var(--bad) }
+  pre { margin:0; white-space:pre-wrap; font:13px/1.4 ui-monospace,Menlo,Consolas,monospace }
+  .hidden { display:none }
+  #chat { max-height:220px; overflow:auto; margin:8px 0 }
+  .msg { padding:6px 0; border-bottom:1px dashed var(--line) }
+</style>
+</head>
+<body>
+<main>
+  <h1>Python Practice Study</h1>
+
+  <section id="consent" class="card">
+    <h2>Before you start</h2>
+    <p>This is a research pilot about how AI help affects learning. You will solve short Python exercises. On some exercises an AI helper is available, on others it is switched off, and which is which is decided by the system. Some tasks are done with no help at all so we can measure what you can do on your own.</p>
+    <p>We record your submitted code, whether it passed, how you used the helper, and activity in this page (pasting, and switching away from the tab). We do not record anything outside this page. Participation is voluntary and you can stop at any time. Do not enter personal information in the code or chat.</p>
+    <p class="mut">Research-pilot notice: before real participants, this study needs an ethics review and a consent text approved by one. This text is a placeholder.</p>
+    <label><input type="checkbox" id="agree"> I have read this and agree to take part.</label>
+    <p><button id="start" class="primary" disabled>Start</button></p>
+  </section>
+
+  <section id="work" class="hidden">
+    <div id="banner" class="banner hidden"></div>
+    <div class="card">
+      <div class="row"><h2 id="title" style="flex:1"></h2><span id="kind" class="mut"></span></div>
+      <p id="prompt"></p>
+      <pre id="sig" class="mut"></pre>
+      <div id="examples" class="mut"></div>
+    </div>
+    <div class="card">
+      <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
+      <div class="row" style="margin-top:8px">
+        <button id="run">Run examples</button>
+        <button id="submit" class="primary">Submit</button>
+        <label id="urgentBox" class="mut hidden"><input type="checkbox" id="urgent"> next one is urgent (full help, not measured)</label>
+      </div>
+      <div id="result" style="margin-top:8px"></div>
+    </div>
+    <div id="helperCard" class="card hidden">
+      <h2>AI helper <span id="tier" class="mut"></span></h2>
+      <div id="chat"></div>
+      <div class="row"><input id="ask" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)" placeholder="Ask for help"><button id="send">Send</button></div>
+    </div>
+    <p class="mut" id="progress"></p>
+  </section>
+
+  <section id="finished" class="card hidden"><h2>All done</h2><p>Thank you for taking part.</p></section>
+</main>
+
+<script>
+"use strict";
+let user = null, task = null;
+try { user = sessionStorage.getItem("user"); } catch (e) {}
+const $ = id => document.getElementById(id);
+
+async function api(path, body) {
+  const r = await fetch("/api/" + path, {
+    method: body === undefined ? "GET" : "POST",
+    headers: {"Content-Type": "application/json", "X-User": user || ""},
+    body: body === undefined ? undefined : JSON.stringify(body)
+  });
+  const j = await r.json().catch(() => ({error: "bad response"}));
+  if (!r.ok) throw new Error(j.error || r.statusText);
+  return j;
+}
+const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function ev(kind, data) { if (task) api("event", {task_id: task.task_id, kind, data}).catch(() => {}); }
+
+$("agree").onchange = () => $("start").disabled = !$("agree").checked;
+$("start").onclick = async () => {
+  try {
+    const j = await api("join", {consent: true});
+    user = j.user;
+    try { sessionStorage.setItem("user", user); } catch (e) {}
+    await load();
+  } catch (e) { alert(e.message); }
+};
+
+async function load() {
+  $("consent").classList.add("hidden");
+  const t = await api("next", {urgent: $("urgent").checked});
+  $("urgent").checked = false;
+  if (t.done) { $("work").classList.add("hidden"); $("finished").classList.remove("hidden"); return; }
+  task = t;
+  $("work").classList.remove("hidden");
+  $("title").textContent = t.title;
+  $("kind").textContent = {anchor:"Baseline", assess_b:"Check-in", assess_c:"Final check", practice:"Practice"}[t.kind];
+  $("prompt").textContent = t.prompt;
+  $("sig").textContent = t.signature;
+  $("examples").innerHTML = t.examples.map(e => "<div><code>" + esc(e.call) + "</code> → <code>" + esc(e.expected) + "</code></div>").join("");
+  $("code").value = t.starter;
+  $("result").innerHTML = "";
+  $("chat").innerHTML = "";
+  $("helperCard").classList.toggle("hidden", !t.helper);
+  $("tier").textContent = t.helper ? "(" + t.tier + ")" : "";
+  $("urgentBox").classList.toggle("hidden", t.kind !== "practice");
+  const b = $("banner");
+  b.classList.toggle("hidden", !t.focus);
+  b.textContent = t.focus ? "Focus mode: no AI help, and please stay on this page. Switching away and pasting are recorded." : "";
+  const s = await api("status");
+  $("progress").textContent = "Baseline " + s.anchors + " · practice " + s.practice;
+}
+
+// Activity logging. These are signals for the study, not a lock: someone can still use a second device.
+$("code").addEventListener("paste", e => {
+  const text = (e.clipboardData && e.clipboardData.getData("text")) || "";
+  if (task && task.focus) { e.preventDefault(); ev("paste_blocked", {chars: text.length}); }
+  else ev("paste", {chars: text.length});
+});
+$("code").addEventListener("drop", e => { if (task && task.focus) { e.preventDefault(); ev("drop_blocked"); } });
+document.addEventListener("visibilitychange", () => { if (task && task.focus) ev(document.hidden ? "blur" : "focus"); });
+window.addEventListener("blur", () => { if (task && task.focus) ev("blur"); });
+
+$("run").onclick = async () => {
+  $("run").disabled = true; ev("run");
+  try {
+    const j = await api("run", {task_id: task.task_id, code: $("code").value});
+    $("result").innerHTML = (j.error ? "<div class='bad'>" + esc(j.error) + "</div>" : "") +
+      j.results.map(r => "<div class='" + (r.ok ? "ok" : "bad") + "'>" + (r.ok ? "✓ " : "✗ ") + "<code>" + esc(r.call) + "</code> expected <code>" +
+      esc(r.expected) + "</code>" + (r.ok ? "" : ", got <code>" + esc(r.err || JSON.stringify(r.got)) + "</code>") + "</div>").join("");
+  } catch (e) { $("result").textContent = e.message; }
+  $("run").disabled = false;
+};
+
+$("submit").onclick = async () => {
+  $("submit").disabled = true;
+  try {
+    const j = await api("submit", {task_id: task.task_id, code: $("code").value});
+    $("result").innerHTML = "<div class='" + (j.passed ? "ok" : "bad") + "'>" + (j.passed ? "Correct." : "Not quite") +
+      " (" + j.tests_passed + "/" + j.tests_total + " tests)" + (j.error ? " " + esc(j.error) : "") + "</div>";
+    setTimeout(load, 1200);
+  } catch (e) { $("result").textContent = e.message; }
+  $("submit").disabled = false;
+};
+
+$("send").onclick = async () => {
+  const m = $("ask").value.trim(); if (!m) return;
+  $("ask").value = ""; $("send").disabled = true;
+  $("chat").insertAdjacentHTML("beforeend", "<div class='msg'><b>You:</b> " + esc(m) + "</div>");
+  try {
+    const j = await api("helper", {task_id: task.task_id, message: m, code: $("code").value});
+    $("chat").insertAdjacentHTML("beforeend", "<div class='msg'><b>Helper:</b> <pre>" + esc(j.reply) + "</pre></div>");
+  } catch (e) { $("chat").insertAdjacentHTML("beforeend", "<div class='msg bad'>" + esc(e.message) + "</div>"); }
+  $("send").disabled = false; $("chat").scrollTop = 1e9;
+};
+
+if (user) load().catch(() => { try { sessionStorage.removeItem("user"); } catch (e) {} user = null; $("consent").classList.remove("hidden"); $("work").classList.add("hidden"); });
+</script>
+</body>
+</html>

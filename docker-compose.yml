@@ -1,0 +1,35 @@
+# docker compose up --build        (set ADMIN_TOKEN, RUNNER_KEY and optionally ANTHROPIC_API_KEY in your environment or a .env file)
+services:
+  runner:
+    build: { context: ., dockerfile: Dockerfile.runner }
+    environment:
+      RUNNER_KEY: ${RUNNER_KEY:?set RUNNER_KEY to a long random string}
+    networks: [sandbox]            # sandbox is internal: no internet, and nothing else is attached to it but the app
+    read_only: true
+    tmpfs: ["/tmp:size=32m,noexec,nosuid"]
+    user: "10002:10002"
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    mem_limit: 768m
+    pids_limit: 128
+    cpus: 1.0
+    restart: unless-stopped
+  app:
+    build: { context: ., dockerfile: Dockerfile }
+    environment:
+      RUNNER_URL: http://runner:9000
+      RUNNER_KEY: ${RUNNER_KEY:?set RUNNER_KEY}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports: ["127.0.0.1:8001:8001"]   # put a TLS reverse proxy in front of this before real participants
+    volumes: ["study-data:/data"]
+    networks: [sandbox, default]
+    depends_on: [runner]
+    cap_drop: [ALL]
+    security_opt: ["no-new-privileges:true"]
+    restart: unless-stopped
+networks:
+  sandbox:
+    internal: true
+volumes:
+  study-data:
