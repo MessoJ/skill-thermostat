@@ -33,6 +33,7 @@ def solves(ex, text):
 def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--n", type=int, default=8)
+    ap.add_argument("--delay", type=float, default=0.0, help="Delay in seconds between requests (useful for free-tier rate limits)")
     ap.add_argument("--out", default="live_check.txt")
     ap.add_argument("--stub", action="store_true")
     a = ap.parse_args(argv)
@@ -53,6 +54,8 @@ def main(argv=None):
         task = dict(id=ex.id, title=ex.title, prompt=ex.prompt, signature=f"{ex.fname}({ex.params})")
         for tier in rows:
             for msg in MESSAGES:
+                if a.delay > 0:
+                    time.sleep(a.delay)
                 t0 = time.time()
                 try:
                     raw = helper.reply(tier, task, msg, ex.starter)

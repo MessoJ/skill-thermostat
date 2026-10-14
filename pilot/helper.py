@@ -11,6 +11,7 @@ import ast
 import json
 import os
 import re
+import time
 import urllib.error
 import urllib.request
 
@@ -104,7 +105,6 @@ class GeminiHelper:
     def reply(self, tier, task, message, code):
         user = (f"Exercise: {task['title']}\n{task['prompt']}\nFunction: {task['signature']}\n\n"
                 f"Learner's current code:\n```python\n{code}\n```\n\nLearner's message: {message}")
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
         payload = {
             "systemInstruction": {
                 "parts": [{"text": SYSTEM[tier]}]
@@ -121,13 +121,47 @@ class GeminiHelper:
             }
         }
         data = json.dumps(payload).encode("utf-8")
-        req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
-        try:
-            with urllib.request.urlopen(req, timeout=30) as resp:
-                body = json.loads(resp.read().decode("utf-8"))
-        except urllib.error.HTTPError as e:
-            err_body = e.read().decode("utf-8", errors="replace")
-            raise RuntimeError(f"Gemini API error ({e.code}): {err_body}") from e
+        models_to_try = [self.model]
+        if self.model != "gemini-3-flash-preview":
+            models_to_try.append("gemini-3-flash-preview")
+
+        body = None
+        last_err = None
+        for current_model in models_to_try:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{current_model}:generateContent?key={self.api_key}"
+            req = urllib.request.Request(url, data=data, headers={"Content-Type": "application/json"})
+            timeout = 8 if len(models_to_try) > 1 and current_model == models_to_try[0] else 30
+            for attempt in range(2):
+                try:
+                    with urllib.request.urlopen(req, timeout=timeout) as resp:
+                        body = json.loads(resp.read().decode("utf-8"))
+                        break
+                except urllib.error.HTTPError as e:
+                    err_body = e.read().decode("utf-8", errors="replace")
+                    last_err = RuntimeError(f"Gemini API error ({e.code}) on {current_model}: {err_body}")
+                    if e.code == 429 and attempt == 0:
+                        wait = 5
+                        try:
+                            for d in json.loads(err_body).get("error", {}).get("details", []):
+                                if "retryDelay" in d:
+                                    wait = max(wait, float(d["retryDelay"].rstrip("s")))
+                        except Exception:
+                            pass
+                        time.sleep(min(wait, 35))
+                        continue
+                    if e.code in (500, 503):
+                        break  # Immediately fallback to secondary model
+                except (TimeoutError, OSError) as e:
+                    last_err = e
+                    break
+            if body:
+                break
+
+        if not body and last_err:
+            raise last_err
+
+        if not body:
+            return ""
         candidates = body.get("candidates", [])
         if not candidates:
             return ""
