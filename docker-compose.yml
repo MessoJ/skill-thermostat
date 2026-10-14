@@ -10,7 +10,7 @@ services:
       - RUNNER_KEY=${RUNNER_KEY:-local-dev-runner-secret}
       - ADMIN_TOKEN=${ADMIN_TOKEN:-}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
-      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-2.5-flash}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-3.8-flash}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
       - HELPER_MODEL=${HELPER_MODEL:-}
     volumes:

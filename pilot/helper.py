@@ -99,7 +99,7 @@ class GeminiHelper:
         self.api_key = api_key or os.environ.get("GEMINI_API_KEY")
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY must be set")
-        self.model = model or os.environ.get("GEMINI_MODEL") or os.environ.get("HELPER_MODEL", "gemini-2.5-flash")
+        self.model = model or os.environ.get("GEMINI_MODEL") or os.environ.get("HELPER_MODEL", "gemini-3.8-flash")
 
     def reply(self, tier, task, message, code):
         user = (f"Exercise: {task['title']}\n{task['prompt']}\nFunction: {task['signature']}\n\n"

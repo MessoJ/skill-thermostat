@@ -346,6 +346,8 @@ def test_gemini_helper_request_format(monkeypatch):
     assert isinstance(h, GeminiHelper)
     task = dict(id="p01", title="Sum evens", prompt="Sum all evens", signature="sum_evens(xs)")
     reply = h.reply("hints", task, "I need help", "def sum_evens(xs): pass")
+    assert h.model == "gemini-3.8-flash"
+    assert "gemini-3.8-flash:generateContent" in recorded["url"]
     assert reply == "Consider the base case."
     assert "key=test-key-123" in recorded["url"]
     assert recorded["data"]["generationConfig"]["maxOutputTokens"] == 600
