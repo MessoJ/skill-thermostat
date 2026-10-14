@@ -7,6 +7,7 @@
 The model is never given the reference solution or hidden tests. Prompts alone are not trusted to enforce
 the tier, so every reply is also screened by `scrub` before the learner sees it.
 """
+import ast
 import os
 import re
 
@@ -21,10 +22,26 @@ SYSTEM = {
 FALLBACK = ("I can't go further than that at this level. Try writing out your approach in words, then check "
             "it against the examples.")
 _FENCE = re.compile(r"```.*?```", re.S)
+_DEF_RE = re.compile(r"^\s*def\s+[a-zA-Z_]\w*\s*\(", re.M)
 
 
 def _code_lines(block):
     return [l for l in block.splitlines() if l.strip() and not l.strip().startswith("```")]
+
+
+def _ast_shape(code_str):
+    """Canonicalize AST node types (ignoring variable names) to catch renamed solution leaks."""
+    try:
+        tree = ast.parse(code_str.strip())
+    except SyntaxError:
+        return None
+    if isinstance(tree, ast.Module) and tree.body and isinstance(tree.body[0], ast.FunctionDef):
+        stmts = tree.body[0].body
+    else:
+        stmts = tree.body
+    if not stmts:
+        return None
+    return tuple(type(n).__name__ for s in stmts for n in ast.walk(s) if not isinstance(n, (ast.Load, ast.Store, ast.Name, ast.arg)))
 
 
 def violates(tier, text, ref=None):
@@ -32,12 +49,24 @@ def violates(tier, text, ref=None):
     if tier == "full":
         return False
     limit = 0 if tier == "nudge" else 3
-    if any(len(_code_lines(b)) > limit for b in _FENCE.findall(text)):
+    fences = _FENCE.findall(text)
+    if any(len(_code_lines(b)) > limit for b in fences):
+        return True
+    if tier == "nudge" and _DEF_RE.search(text):
         return True
     if ref:
+        fname = ref.splitlines()[0].split("(")[0].replace("def ", "").strip()
+        if fname and re.search(rf"\bdef\s+{re.escape(fname)}\s*\(", text):
+            return True
         body = [l.strip() for l in ref.splitlines()[1:] if l.strip()]
         if body and sum(l in text for l in body) / len(body) >= 0.7:
             return True
+        ref_shape = _ast_shape(ref)
+        if ref_shape and len(ref_shape) >= 4:
+            for b in fences:
+                inner = "\n".join(_code_lines(b))
+                if _ast_shape(inner) == ref_shape:
+                    return True
     return False
 
 
@@ -61,12 +90,12 @@ class StubHelper:
 
 
 class ClaudeHelper:
-    """Claude via the Messages API. Needs `pip install anthropic` and ANTHROPIC_API_KEY. Not exercised live yet."""
+    """Claude via the Messages API. Needs `pip install anthropic` and ANTHROPIC_API_KEY."""
 
     def __init__(self, model=None, api_key=None):
-        import anthropic  # imported lazily so the pilot runs without the SDK
+        import anthropic
         self.client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
-        self.model = model or os.environ.get("HELPER_MODEL", "claude-sonnet-5-5")
+        self.model = model or os.environ.get("HELPER_MODEL", "claude-sonnet-4-5")
 
     def reply(self, tier, task, message, code):
         user = (f"Exercise: {task['title']}\n{task['prompt']}\nFunction: {task['signature']}\n\n"

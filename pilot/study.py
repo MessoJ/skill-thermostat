@@ -1,4 +1,4 @@
-"""Study engine: arms, phases, thermostat control and persistence (SQLite)."""
+"""Study engine: arms, phases, Computerized Adaptive Testing (CAT) baseline, thermostat control and persistence (SQLite)."""
 import json
 import secrets
 import sqlite3
@@ -6,16 +6,17 @@ import time
 from contextlib import contextmanager
 
 import numpy as np
+from scipy.special import ndtr
 
 from skill_thermostat import SkillFilter, Thermostat
-from skill_thermostat.model import GRID
+from skill_thermostat.model import A_DISC, GRID
 
+from . import config
 from . import exercises as X
 from . import runner
-from . import config
 from .config import C_GRID, CONTROLLER, DELTA, STUDY, WIDE_SD, WIDE_SHIFT
 from .helper import make_helper, scrub
-from .verdict import LOOKBACK, decide
+from .verdict import LOOKBACK, MIN_OBS, MIN_PROBES, STALE_AFTER, decide
 
 ARMS = ("thermostat", "always_on", "fixed_drills")
 POOL_OF = {"anchor": "A", "assess_b": "B", "assess_c": "C", "practice": "P"}
@@ -52,6 +53,15 @@ class NotFound(EngineError):
     status = 404
 
 
+def _fisher_info_item(pg, d_val, a=A_DISC):
+    """Posterior expected Fisher information for an unassisted item of difficulty d_val."""
+    z = a * (GRID - d_val)
+    p = np.clip(ndtr(z), 1e-9, 1.0 - 1e-9)
+    phi2 = np.exp(-z * z) / (2.0 * np.pi)
+    info_grid = (a * a * phi2) / (p * (1.0 - p))
+    return float(pg @ info_grid)
+
+
 class Engine:
     def __init__(self, db_path, helper=None):
         self.db_path = db_path
@@ -60,7 +70,7 @@ class Engine:
         con = sqlite3.connect(db_path, timeout=30)
         con.execute("PRAGMA journal_mode=WAL")
         con.executescript(SCHEMA)
-        try:                                   # databases created before role floors existed
+        try:
             con.execute("ALTER TABLE users ADD COLUMN floor_abs REAL")
         except sqlite3.OperationalError:
             pass
@@ -131,13 +141,27 @@ class Engine:
 
     @staticmethod
     def plan(seed):
-        """Per-learner fixed forms: which baseline anchors (random order) and which matched B/C pairs, drawn from the user's seed."""
+        """Per-learner fixed forms: initial Pool A ordering and matched B/C pairs, drawn from the user's seed."""
         rng = np.random.default_rng([seed, 7919])
         a_ids = [e.id for e in X.pool("A")]
         anchors = [a_ids[i] for i in rng.permutation(len(a_ids))[:STUDY["anchors"]]]
         b_ids = sorted(e.id for e in X.pool("B"))
         pairs = [b_ids[i] for i in sorted(rng.permutation(len(b_ids))[:STUDY["assess_n"]])]
         return dict(anchor=anchors, assess_b=pairs, assess_c=["c" + b[1:] for b in pairs])
+
+    @staticmethod
+    def _cat_pick_anchor(F, seen, rng):
+        """Computerized Adaptive Testing (CAT): select the unseen Pool A item that maximizes
+        posterior expected Fisher information, with slight randomization among the top-2 items
+        for item-exposure balance."""
+        pg = F.post[0].sum(axis=1)
+        candidates = [e for e in X.pool("A") if e.id not in seen]
+        scored = sorted(
+            candidates,
+            key=lambda e: (-round(_fisher_info_item(pg, e.d), 6), float(rng.random()))
+        )
+        # First anchor starts at median difficulty; subsequent anchors pick the top Fisher-information item
+        return scored[0]
 
     @staticmethod
     def _view(t):
@@ -154,7 +178,7 @@ class Engine:
         uid, rnd = secrets.token_hex(8), secrets.SystemRandom()
         with self.tx() as c:
             counts = {a: c.execute("SELECT COUNT(*) FROM users WHERE arm=?", (a,)).fetchone()[0] for a in ARMS}
-            arm = min(ARMS, key=lambda a: (counts[a], rnd.random()))   # blocked randomization
+            arm = min(ARMS, key=lambda a: (counts[a], rnd.random()))    # blocked randomization
             c.execute("INSERT INTO users(id, arm, created, seed, consent, post, floor_abs) VALUES (?,?,?,?,1,?,?)",
                       (uid, arm, time.time(), rnd.randrange(2 ** 31), self._new_filter().post.tobytes(), floor_abs))
         return dict(user=uid, arm=arm)
@@ -170,14 +194,9 @@ class Engine:
                 return dict(done=True)
             n_issued = c.execute("SELECT COUNT(*) FROM tasks WHERE user=?", (uid,)).fetchone()[0]
             rng = np.random.default_rng([u["seed"], n_issued])
-            summ = self._filter(u).summary()
+            F = self._filter(u)
+            summ = F.summary()
             seen = {r[0] for r in c.execute("SELECT ex_id FROM tasks WHERE user=?", (uid,))}
-            if kind == "practice":   # zone of proximal development: aim a little above the current estimate
-                left = [e for e in X.pool("P") if e.id not in seen]
-                left.sort(key=lambda e: abs(e.d - (float(summ.mean[0]) + 0.3)))
-                ex = left[int(rng.integers(0, min(3, len(left))))]
-            else:                    # baseline and assessments follow the learner's fixed plan
-                ex = X.BANK[self.plan(u["seed"])[kind][u[COUNTER[kind]]]]
 
             alpha, off, sent, is_urgent = 1.0, False, False, False
             if kind == "practice":
@@ -185,14 +204,41 @@ class Engine:
                                    (uid, STUDY["urgent_window"])).fetchall()
                 is_urgent = bool(urgent) and sum(r[0] for r in recent) < STUDY["urgent_max"]
                 elig = not is_urgent    # urgent tasks always get full help and are never measured
+                u_prb, u_snt = float(rng.random()), float(rng.random())
                 if u["arm"] == "thermostat":
-                    a, o, s = self.ctl.decide(summ, np.array([u["floor_hat"]]), np.array([elig]),
-                                              np.array([rng.random()]), np.array([rng.random()]))
+                    p_rows = c.execute(
+                        "SELECT id, off, lockdown FROM tasks WHERE user=? AND kind='practice' AND done IS NOT NULL ORDER BY id",
+                        (uid,)).fetchall()
+                    n_ord_probes = sum(1 for r in p_rows if r["off"] and not r["lockdown"])
+                    last_p = max((r["id"] for r in p_rows if r["off"]), default=None)
+                    since = sum(1 for r in p_rows if last_p is None or r["id"] > last_p)
+                    rem_prac = STUDY["practice_total"] - u["n_practice"]
+                    min_req = max(MIN_PROBES, MIN_OBS)
+                    need_probes = (n_ord_probes < min_req) and (rem_prac <= (min_req - n_ord_probes) * 2)
+                    a, o, s = self.ctl.decide(
+                        summ, np.array([u["floor_hat"]]), np.array([elig]),
+                        np.array([0.0 if need_probes else u_prb]), np.array([u_snt]),
+                        since_last=np.array([since]), stale_limit=STALE_AFTER - 1)
                     alpha, off, sent = float(a[0]), bool(o[0]), bool(s[0])
                 elif u["arm"] == "fixed_drills":
                     off = elig and (u["n_practice"] + 1) % STUDY["drill_every"] == 0
-            else:                       # anchors and assessments: always unassisted, strict lockdown
+
+                left = [e for e in X.pool("P") if e.id not in seen]
+                if off:
+                    # Unassisted probe: pick from top-3 Fisher-informative items near the decision boundary
+                    pg = F.post[0].sum(axis=1)
+                    left.sort(key=lambda e: -_fisher_info_item(pg, e.d))
+                else:
+                    # Assisted practice: Zone of Proximal Development (mean + 0.3)
+                    left.sort(key=lambda e: abs(e.d - (float(summ.mean[0]) + 0.3)))
+                ex = left[int(rng.integers(0, min(3, len(left))))]
+            elif kind == "anchor":
                 alpha, off = 0.0, True
+                ex = self._cat_pick_anchor(F, seen, rng)
+            else:
+                alpha, off = 0.0, True
+                ex = X.BANK[self.plan(u["seed"])[kind][u[COUNTER[kind]]]]
+
             tier = "off" if off else "full" if alpha >= 0.67 else "hints" if alpha >= 0.34 else "nudge"
             strict = int(kind != "practice" or sent)
             trusted = int(kind == "anchor" or sent)
@@ -224,14 +270,14 @@ class Engine:
             self._user(c, uid)
             t = self._pending(c, uid, task_id)
         ex = X.BANK[t["ex_id"]]
-        res = runner.run_cases(code, ex.fname, ex.cases, ex.expected())     # outside the write lock
+        res = runner.run_cases(code, ex.fname, ex.cases, ex.expected())      # outside the write lock
         with self.tx() as c:
             u = self._user(c, uid)
-            t = self._pending(c, uid, task_id)                              # re-check: another submit may have won
+            t = self._pending(c, uid, task_id)                               # re-check: another submit may have won
             passed = int(res["ok"])
             evs = c.execute("SELECT kind, data FROM events WHERE task=?", (task_id,)).fetchall()
             suspect = int(any(self._suspicious(e["kind"], e["data"]) for e in evs))
-            trusted = int(bool(t["trusted"]) and not suspect)   # a trusted item that saw suspicious activity loses trust
+            trusted = int(bool(t["trusted"]) and not suspect)
             kind, off = t["kind"], bool(t["off"])
             F = self._filter(u)
             d, y, one = np.array([ex.d]), np.array([bool(passed)]), np.array([True])
@@ -241,21 +287,16 @@ class Engine:
             if kind == "anchor":
                 F.update(d, y, one, trusted=np.array([bool(trusted)]))
                 if n_after == STUDY["anchors"]:
-                    # The simulator sets floor = mean - DELTA from 30 anchors. With only 10 the posterior is wide
-                    # (and at a perfect score it is pinned against the ceiling), so mean - DELTA put the floor above
-                    # the lower bound and switched help off for the strongest learners. Anchoring the floor at the
-                    # baseline lower bound instead means a learner starts with margin ~DELTA (full help) and loses
-                    # help as the lower bound drops. This is more lenient than the simulated floor by ~1.3 sd.
                     if u["floor_abs"] is not None:
                         floor_hat = u["floor_abs"]
                     else:
                         base = F.summary()
-                        # A baseline can only be measured within the anchors' difficulty range: someone who aces every
-                        # item is known to be above the hardest one, not at the model's ceiling. Clip before subtracting
-                        # DELTA so a perfect score does not set a floor the person can never be safely above.
                         ds = [e.d for e in X.pool("A")]
                         est = float((base.mean if config.FLOOR_RULE == "mean" else base.q10)[0])
-                        floor_hat = min(max(est, min(ds)), max(ds)) - DELTA
+                        # Top-clip at max(ds) so perfect scorers are not penalized by the grid ceiling;
+                        # never bottom-clip above the learner's own q10 so weak learners are not locked out.
+                        raw_floor = min(est, max(ds)) - DELTA
+                        floor_hat = min(raw_floor, float(base.q10[0]) - 0.05)
             elif kind == "practice":
                 if off:
                     F.update(d, y, one, trusted=np.array([bool(trusted)]))
@@ -280,19 +321,27 @@ class Engine:
                     visible=visible)
 
     def ask_helper(self, uid, task_id, message, code):
+        denied = False
         with self.tx() as c:
             self._user(c, uid)
             t = self._pending(c, uid, task_id)
             if t["tier"] == "off":
                 c.execute("INSERT INTO events(task, ts, kind, data) VALUES (?,?,'helper_denied','{}')", (task_id, time.time()))
-                raise Forbidden("the AI helper is off for this task")
-            n = c.execute("SELECT COUNT(*) FROM helper_log WHERE task=?", (task_id,)).fetchone()[0]
-            if n >= STUDY["helper_max_per_task"]:
-                raise Forbidden("helper limit reached for this task")
+                denied = True
+            else:
+                n = c.execute("SELECT COUNT(*) FROM helper_log WHERE task=?", (task_id,)).fetchone()[0]
+                if n >= STUDY["helper_max_per_task"]:
+                    raise Forbidden("helper limit reached for this task")
+        if denied:
+            raise Forbidden("the AI helper is off for this task")
         ex = X.BANK[t["ex_id"]]
         task = dict(id=ex.id, title=ex.title, prompt=ex.prompt, signature=f"{ex.fname}({ex.params})")
         text = scrub(t["tier"], self.helper.reply(t["tier"], task, message, code), ex.ref)
         with self.tx() as c:
+            self._pending(c, uid, task_id)
+            n = c.execute("SELECT COUNT(*) FROM helper_log WHERE task=?", (task_id,)).fetchone()[0]
+            if n >= STUDY["helper_max_per_task"]:
+                raise Forbidden("helper limit reached for this task")
             c.execute("INSERT INTO helper_log(task, ts, tier, request, response) VALUES (?,?,?,?,?)",
                       (task_id, time.time(), t["tier"], message, text))
         return dict(tier=t["tier"], reply=text)
@@ -318,7 +367,7 @@ class Engine:
             trend = log[-1][0] - log[-1 - LOOKBACK][0]
         unassisted = [t for t in done if t["off"] and t["kind"] in ("anchor", "practice")]
         probes = [t for t in unassisted if t["kind"] == "practice"]
-        ordinary = [t for t in probes if not t["lockdown"]]            # honor-system probes
+        ordinary = [t for t in probes if not t["lockdown"]]             # honor-system probes
         anchors = [t for t in unassisted if t["kind"] == "anchor"]
         last = max((t["id"] for t in probes), default=None)
         since = sum(1 for t in done if t["kind"] == "practice" and (last is None or t["id"] > last))
@@ -354,6 +403,6 @@ class Engine:
                     helper_requests=helper, suspect_tasks=sum(t["suspect"] for t in done),
                     skill_mean=float(s.mean[0]), skill_lower=float(s.q10[0]), floor=u["floor_hat"],
                     contamination_est=float(s.c_mean[0])))
-        for r in out:                       # outside the transaction above: verdict() opens its own
+        for r in out:                    # outside the transaction above: verdict() opens its own
             r["verdict"] = self.verdict(r["user"])
         return out

@@ -1,22 +1,11 @@
-"""Item difficulty calibration from pilot data.
-
-    python -m pilot.calibrate study.db --out pilot/calibrated.json [--prior-sd 1.0]
-
-Model: P(correct) = Phi(A * (theta - d)), the same probit curve the thermostat uses, slope A fixed at model.A_DISC. People are
-integrated out with a N(0, 1) prior (marginal maximum likelihood by EM on the filter's grid), so difficulties land on the scale
-where the population mean skill is 0 and the sd is 1. Each difficulty gets a weak normal prior centred on the nominal guess
-(default sd 1.0) so items with little data stay near their guess instead of running off.
-
-Only unassisted responses count: tier 'off' and not flagged suspect. Items with fewer than MIN_N responses are reported but
-should not replace the nominal value. Nothing here is validated on real data yet; the recovery test uses simulated learners.
-"""
+"""Item difficulty calibration from pilot data."""
 import argparse
 import json
 import sqlite3
 import sys
-from collections import defaultdict
 
 import numpy as np
+from scipy.special import ndtr
 from scipy.stats import norm
 
 from skill_thermostat.model import A_DISC, GRID
@@ -30,6 +19,24 @@ def load_responses(db_path):
     rows = con.execute("SELECT user, ex_id, passed FROM tasks WHERE done IS NOT NULL AND off=1 AND suspect=0").fetchall()
     con.close()
     return [(u, e, int(p)) for u, e, p in rows]
+
+
+def _refine_d(n_g, r_g, d_init, d0, prior_sd, a, steps=5):
+    """Continuous Newton-Raphson refinement of MAP item difficulty d and analytical curvature."""
+    d = float(d_init)
+    for _ in range(steps):
+        z = a * (GRID - d)
+        p = np.clip(ndtr(z), 1e-9, 1.0 - 1e-9)
+        phi = np.exp(-0.5 * z ** 2) / np.sqrt(2.0 * np.pi)
+        w1 = a * phi / (p * (1.0 - p))
+        grad = -np.sum((r_g - n_g * p) * w1) - (d - d0) / (prior_sd ** 2)
+        # Fisher scoring (expected negative Hessian) is strictly positive-definite
+        info = np.sum(n_g * (a * phi) ** 2 / (p * (1.0 - p))) + 1.0 / (prior_sd ** 2)
+        step = np.clip(grad / info, -0.5, 0.5)
+        d = float(np.clip(d + step, -3.5, 3.5))
+        if abs(step) < 1e-6:
+            break
+    return d, info
 
 
 def calibrate(responses, nominal, prior_sd=1.0, iters=40, a=A_DISC):
@@ -47,39 +54,37 @@ def calibrate(responses, nominal, prior_sd=1.0, iters=40, a=A_DISC):
     prior = norm.pdf(GRID)
     prior /= prior.sum()
     answered = y >= 0
+    pc_cand = np.clip(ndtr(a * (GRID[None, :] - D_CAND[:, None])), 1e-9, 1.0 - 1e-9)
+    log_pc, log_1pc = np.log(pc_cand), np.log(1.0 - pc_cand)
+    infos = np.zeros(J)
+
     for _ in range(iters):
-        p_ok = norm.cdf(a * (GRID[None, :] - d[:, None]))                       # (J, G)
-        logp, log1p = np.log(np.clip(p_ok, 1e-9, 1)), np.log(np.clip(1 - p_ok, 1e-9, 1))
+        p_ok = np.clip(ndtr(a * (GRID[None, :] - d[:, None])), 1e-9, 1.0 - 1e-9)
+        logp, log1p = np.log(p_ok), np.log(1.0 - p_ok)
         ll = np.zeros((P, G))
         for j in range(J):
             m = answered[:, j]
             ll[m] += np.where(y[m, j][:, None] == 1, logp[j][None, :], log1p[j][None, :])
         w = np.exp(ll - ll.max(axis=1, keepdims=True)) * prior[None, :]
-        w /= w.sum(axis=1, keepdims=True)                                          # posterior over theta per person
+        w /= w.sum(axis=1, keepdims=True)
         new = d.copy()
         for j in range(J):
             m = answered[:, j]
-            n_g = w[m].sum(axis=0)                                                 # expected people at each theta
-            r_g = (w[m] * y[m, j][:, None]).sum(axis=0)                            # expected correct at each theta
-            pc = norm.cdf(a * (GRID[None, :] - D_CAND[:, None]))                   # (candidates, G)
-            obj = (r_g * np.log(np.clip(pc, 1e-9, 1)) + (n_g - r_g) * np.log(np.clip(1 - pc, 1e-9, 1))).sum(axis=1)
-            obj += norm.logpdf(D_CAND, d0[j], prior_sd)
-            new[j] = D_CAND[int(np.argmax(obj))]
-        if np.max(np.abs(new - d)) < 1e-3:
+            n_g = w[m].sum(axis=0)
+            r_g = (w[m] * y[m, j][:, None]).sum(axis=0)
+            obj = (r_g * log_pc + (n_g - r_g) * log_1pc).sum(axis=1) + norm.logpdf(D_CAND, d0[j], prior_sd)
+            d_grid = D_CAND[int(np.argmax(obj))]
+            new[j], infos[j] = _refine_d(n_g, r_g, d_grid, d0[j], prior_sd, a)
+        if np.max(np.abs(new - d)) < 1e-4:
             d = new
             break
         d = new
-    out, step = {}, D_CAND[1] - D_CAND[0]
+
+    out = {}
     for j, item in enumerate(items):
         m = answered[:, j]
-        n_g, r_g = w[m].sum(axis=0), (w[m] * y[m, j][:, None]).sum(axis=0)
-        pc = norm.cdf(a * (GRID[None, :] - D_CAND[:, None]))
-        obj = (r_g * np.log(np.clip(pc, 1e-9, 1)) + (n_g - r_g) * np.log(np.clip(1 - pc, 1e-9, 1))).sum(axis=1)
-        obj += norm.logpdf(D_CAND, d0[j], prior_sd)
-        k = int(np.clip(np.argmax(obj), 1, len(D_CAND) - 2))
-        curv = -(obj[k + 1] - 2 * obj[k] + obj[k - 1]) / step ** 2
-        out[item] = dict(d=float(d[j]), se=float(1 / np.sqrt(curv)) if curv > 1e-9 else None, n=int(m.sum()),
-                         nominal=float(d0[j]))
+        out[item] = dict(d=float(d[j]), se=float(1.0 / np.sqrt(infos[j])) if infos[j] > 1e-9 else None,
+                         n=int(m.sum()), nominal=float(d0[j]))
     return out
 
 
@@ -96,7 +101,8 @@ def main(argv=None):
     res = calibrate(resp, {e.id: e.d for e in X.ALL}, a.prior_sd)
     thin = [k for k, v in res.items() if v["n"] < MIN_N]
     keep = {k: v for k, v in res.items() if v["n"] >= MIN_N}
-    json.dump(dict(items={k: round(v["d"], 3) for k, v in keep.items()}, detail=res), open(a.out, "w"), indent=1)
+    with open(a.out, "w") as f:
+        json.dump(dict(items={k: round(v["d"], 3) for k, v in keep.items()}, detail=res), f, indent=1)
     shift = [abs(v["d"] - v["nominal"]) for v in keep.values()]
     print(f"{len(resp)} responses, {len(res)} items; {len(keep)} with n>={MIN_N} written to {a.out}")
     if shift:

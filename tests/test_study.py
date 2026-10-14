@@ -277,3 +277,43 @@ def test_live_check_script_runs_offline(tmp_path):
     live_check.main(["--stub", "--n", "3", "--out", str(tmp_path / "o.txt")])
     text = (tmp_path / "o.txt").read_text()
     assert "tier    replies" in text and "full" in text
+
+
+def test_cat_baseline_adapts_difficulty_to_learner_responses(client):
+    """CAT selects harder Pool A items when a learner succeeds and easier items when a learner fails."""
+    c, eng = client
+    u_hi, u_lo = join(c), join(c)
+    for _ in range(8):
+        solve_current(c, eng, u_hi, ok=True)
+        solve_current(c, eng, u_lo, ok=False)
+    with eng.tx() as con:
+        hi_ds = [X.BANK[r[0]].d for r in con.execute("SELECT ex_id FROM tasks WHERE user=? ORDER BY id", (u_hi["user"],))]
+        lo_ds = [X.BANK[r[0]].d for r in con.execute("SELECT ex_id FROM tasks WHERE user=? ORDER BY id", (u_lo["user"],))]
+    assert sum(hi_ds[1:]) / len(hi_ds[1:]) > sum(lo_ds[1:]) / len(lo_ds[1:]) + 0.8
+
+
+def test_weak_baseline_learner_is_not_locked_out_of_ai_help(client):
+    """A learner who fails every baseline item starts above their personal floor and receives AI assistance."""
+    c, eng = client
+    u = join(c)
+    with eng.tx() as con:
+        con.execute("UPDATE users SET arm='thermostat' WHERE id=?", (u["user"],))
+    for _ in range(STUDY["anchors"]):
+        solve_current(c, eng, u, ok=False)
+    t = c.post("/api/next", json={}, headers=hdr(u)).json
+    assert t["kind"] == "practice"
+    with eng.tx() as con:
+        row = con.execute("SELECT alpha FROM tasks WHERE id=?", (t["task_id"],)).fetchone()
+    assert row["alpha"] > 0.0
+
+
+def test_helper_denied_event_persists_after_403(client):
+    """Regression: raising Forbidden inside tx() previously rolled back the helper_denied event."""
+    c, eng = client
+    u = join(c)
+    t = c.post("/api/next", json={}, headers=hdr(u)).json
+    r = c.post("/api/helper", json={"task_id": t["task_id"], "message": "give answer"}, headers=hdr(u))
+    assert r.status_code == 403
+    with eng.tx() as con:
+        evs = con.execute("SELECT kind FROM events WHERE task=?", (t["task_id"],)).fetchall()
+    assert [e["kind"] for e in evs] == ["helper_denied"]

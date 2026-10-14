@@ -123,13 +123,13 @@ ITEMS = [
      [([1, 1, 2],), ([],), ([3, 1, 2],), ([5, 5, 5, 2, 2, 9],), ([4, 4, 3, 3],), ([-1, -1, 0, 0, 7],),
       ([2, 3, 3, 1, 1, 1, 2, 2, 2],)]),
 
-    ("p63", "P", 0.7, "Count pairs with sum",
-     "xs is a list of ints and target is an int. Count the pairs of positions (i, j) with i < j such that "
-     "xs[i] + xs[j] == target. Equal values at different positions count as different pairs. Return the count.",
-     "count_pairs(xs, target)",
-     "def count_pairs(xs, target):\n    seen = {}\n    total = 0\n    for x in xs:\n        total += seen.get(target - x, 0)\n        seen[x] = seen.get(x, 0) + 1\n    return total",
-     [([1, 2, 3, 4], 5), ([], 3), ([2, 2, 2], 4), ([1, 1], 3), ([3], 6), ([0, 0, 0, 0], 0), ([1, 5, 3, 3, 7, -1], 6),
-      ([4, 4, 4, 4, 4], 8)]),
+    ("p63", "P", 0.7, "Largest pair product",
+     "xs is a list of at least two ints (which may be negative, zero, or positive). Return the largest product "
+     "xs[i] * xs[j] obtainable from any two distinct positions i != j in xs.",
+     "max_product_pair(xs)",
+     "def max_product_pair(xs):\n    s = sorted(xs)\n    return max(s[0] * s[1], s[-1] * s[-2])",
+     [([1, 2, 3, 4],), ([-10, -20, 1, 2],), ([-5, 4],), ([0, -3, -2],), ([-8, -1, 0, 2, 3],),
+      ([5, 5, 1],), ([-4, 0, 0],), ([10, -10, 5, -5],)]),
 
     ("p64", "P", 0.8, "Prime factors",
      "n is an int with n >= 1. Return the list of prime factors of n in ascending order, repeated according to "
