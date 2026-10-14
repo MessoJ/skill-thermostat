@@ -51,7 +51,7 @@
     <div class="card">
       <textarea id="code" spellcheck="false" autocapitalize="off" autocomplete="off"></textarea>
       <div class="row" style="margin-top:8px">
-        <button id="run">Run examples</button>
+        <button id="run" title="Shortcut: Ctrl+Enter">Run examples</button>
         <button id="submit" class="primary">Submit</button>
         <label id="urgentBox" class="mut hidden"><input type="checkbox" id="urgent"> next one is urgent (full help, not measured)</label>
       </div>
@@ -60,7 +60,7 @@
     <div id="helperCard" class="card hidden">
       <h2>AI helper <span id="tier" class="mut"></span></h2>
       <div id="chat"></div>
-      <div class="row"><input id="ask" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)" placeholder="Ask for help"><button id="send">Send</button></div>
+      <div class="row"><input id="ask" style="flex:1;padding:8px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--fg)" placeholder="Ask for help (press Enter to send)"><button id="send">Send</button></div>
     </div>
     <p class="mut" id="progress"></p>
   </section>
@@ -70,9 +70,13 @@
 
 <script>
 "use strict";
-let user = null, task = null;
-try { user = sessionStorage.getItem("user"); } catch (e) {}
+let user = null, task = null, transitioning = false, lastBlurTs = 0;
+try { user = localStorage.getItem("user") || sessionStorage.getItem("user"); } catch (e) {}
 const $ = id => document.getElementById(id);
+
+function getStore(k) { try { return localStorage.getItem(k) || sessionStorage.getItem(k); } catch (e) { return null; } }
+function setStore(k, v) { try { localStorage.setItem(k, v); sessionStorage.setItem(k, v); } catch (e) {} }
+function delStore(k) { try { localStorage.removeItem(k); sessionStorage.removeItem(k); } catch (e) {} }
 
 async function api(path, body) {
   const r = await fetch("/api/" + path, {
@@ -85,19 +89,24 @@ async function api(path, body) {
   return j;
 }
 const esc = s => String(s).replace(/[&<>]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
-function ev(kind, data) { if (task) api("event", {task_id: task.task_id, kind, data}).catch(() => {}); }
+function ev(kind, data) { if (task && !transitioning) api("event", {task_id: task.task_id, kind, data}).catch(() => {}); }
 
 $("agree").onchange = () => $("start").disabled = !$("agree").checked;
 $("start").onclick = async () => {
+  $("start").disabled = true;
   try {
     const j = await api("join", {consent: true});
     user = j.user;
-    try { sessionStorage.setItem("user", user); } catch (e) {}
+    setStore("user", user);
     await load();
-  } catch (e) { alert(e.message); }
+  } catch (e) {
+    alert(e.message);
+    $("start").disabled = !$("agree").checked;
+  }
 };
 
 async function load() {
+  transitioning = false;
   $("consent").classList.add("hidden");
   const t = await api("next", {urgent: $("urgent").checked});
   $("urgent").checked = false;
@@ -109,9 +118,12 @@ async function load() {
   $("prompt").textContent = t.prompt;
   $("sig").textContent = t.signature;
   $("examples").innerHTML = t.examples.map(e => "<div><code>" + esc(e.call) + "</code> → <code>" + esc(e.expected) + "</code></div>").join("");
-  $("code").value = t.starter;
+  const savedDraft = getStore("draft_" + user + "_" + t.task_id);
+  $("code").value = savedDraft !== null ? savedDraft : t.starter;
   $("result").innerHTML = "";
   $("chat").innerHTML = "";
+  $("run").disabled = false;
+  $("submit").disabled = false;
   $("helperCard").classList.toggle("hidden", !t.helper);
   $("tier").textContent = t.helper ? "(" + t.tier + ")" : "";
   $("urgentBox").classList.toggle("hidden", t.kind !== "practice");
@@ -119,43 +131,104 @@ async function load() {
   b.classList.toggle("hidden", !t.focus);
   b.textContent = t.focus ? "Focus mode: no AI help, and please stay on this page. Switching away and pasting are recorded." : "";
   const s = await api("status");
-  $("progress").textContent = "Baseline " + s.anchors + " · practice " + s.practice;
+  $("progress").textContent = "Baseline " + s.anchors + " · Practice " + s.practice + " · Check-ins " + (s.assess_b + s.assess_c);
 }
 
-// Activity logging. These are signals for the study, not a lock: someone can still use a second device.
+// Editor ergonomics: Tab inserts 4 spaces, Enter preserves indentation, Ctrl/Cmd+Enter runs examples.
+$("code").addEventListener("input", () => {
+  if (user && task) setStore("draft_" + user + "_" + task.task_id, $("code").value);
+});
+$("code").addEventListener("keydown", e => {
+  const el = $("code");
+  if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+    e.preventDefault();
+    if (!$("run").disabled) $("run").click();
+    return;
+  }
+  if (e.key === "Tab") {
+    e.preventDefault();
+    const s = el.selectionStart, end = el.selectionEnd;
+    el.value = el.value.substring(0, s) + "    " + el.value.substring(end);
+    el.selectionStart = el.selectionEnd = s + 4;
+    if (user && task) setStore("draft_" + user + "_" + task.task_id, el.value);
+  } else if (e.key === "Enter") {
+    const s = el.selectionStart, end = el.selectionEnd;
+    const lineStart = el.value.lastIndexOf("\n", s - 1) + 1;
+    const line = el.value.substring(lineStart, s);
+    const match = line.match(/^[ ]*/);
+    let indent = match ? match[0] : "";
+    if (line.trimEnd().endsWith(":")) indent += "    ";
+    if (indent.length > 0) {
+      e.preventDefault();
+      el.value = el.value.substring(0, s) + "\n" + indent + el.value.substring(end);
+      el.selectionStart = el.selectionEnd = s + 1 + indent.length;
+      if (user && task) setStore("draft_" + user + "_" + task.task_id, el.value);
+    }
+  }
+});
+
+// Activity logging. Debounce blur so visibilitychange + window.blur do not double-log.
 $("code").addEventListener("paste", e => {
   const text = (e.clipboardData && e.clipboardData.getData("text")) || "";
   if (task && task.focus) { e.preventDefault(); ev("paste_blocked", {chars: text.length}); }
   else ev("paste", {chars: text.length});
 });
 $("code").addEventListener("drop", e => { if (task && task.focus) { e.preventDefault(); ev("drop_blocked"); } });
-document.addEventListener("visibilitychange", () => { if (task && task.focus) ev(document.hidden ? "blur" : "focus"); });
-window.addEventListener("blur", () => { if (task && task.focus) ev("blur"); });
+function logBlur() {
+  const now = Date.now();
+  if (now - lastBlurTs > 500) { lastBlurTs = now; ev("blur"); }
+}
+document.addEventListener("visibilitychange", () => {
+  if (task && task.focus) { if (document.hidden) logBlur(); else ev("focus"); }
+});
+window.addEventListener("blur", () => { if (task && task.focus) logBlur(); });
+
+function renderDetails(error, results) {
+  return (error ? "<div class='bad'>" + esc(error) + "</div>" : "") +
+    (results || []).map(r => "<div class='" + (r.ok ? "ok" : "bad") + "'>" + (r.ok ? "✓ " : "✗ ") +
+    "<code>" + esc(r.call) + "</code> expected <code>" + esc(r.expected) + "</code>" +
+    (r.ok ? "" : ", got <code>" + esc(r.err || JSON.stringify(r.got)) + "</code>") + "</div>").join("");
+}
 
 $("run").onclick = async () => {
+  if (transitioning) return;
   $("run").disabled = true; ev("run");
   try {
     const j = await api("run", {task_id: task.task_id, code: $("code").value});
-    $("result").innerHTML = (j.error ? "<div class='bad'>" + esc(j.error) + "</div>" : "") +
-      j.results.map(r => "<div class='" + (r.ok ? "ok" : "bad") + "'>" + (r.ok ? "✓ " : "✗ ") + "<code>" + esc(r.call) + "</code> expected <code>" +
-      esc(r.expected) + "</code>" + (r.ok ? "" : ", got <code>" + esc(r.err || JSON.stringify(r.got)) + "</code>") + "</div>").join("");
+    $("result").innerHTML = renderDetails(j.error, j.results);
   } catch (e) { $("result").textContent = e.message; }
-  $("run").disabled = false;
+  if (!transitioning) $("run").disabled = false;
 };
 
 $("submit").onclick = async () => {
+  if (transitioning) return;
+  transitioning = true;
   $("submit").disabled = true;
+  $("run").disabled = true;
   try {
     const j = await api("submit", {task_id: task.task_id, code: $("code").value});
-    $("result").innerHTML = "<div class='" + (j.passed ? "ok" : "bad") + "'>" + (j.passed ? "Correct." : "Not quite") +
-      " (" + j.tests_passed + "/" + j.tests_total + " tests)" + (j.error ? " " + esc(j.error) : "") + "</div>";
-    setTimeout(load, 1200);
-  } catch (e) { $("result").textContent = e.message; }
-  $("submit").disabled = false;
+    if (user && task) delStore("draft_" + user + "_" + task.task_id);
+    $("result").innerHTML = "<div class='" + (j.passed ? "ok" : "bad") + "'><b>" + (j.passed ? "Correct." : "Not quite") +
+      " (" + j.tests_passed + "/" + j.tests_total + " tests)</b>" + (j.error ? " " + esc(j.error) : "") + "</div>" +
+      (!j.passed && j.visible ? renderDetails(null, j.visible) : "");
+    setTimeout(() => { load().catch(err => { transitioning = false; $("result").textContent = err.message; }); }, 1200);
+  } catch (e) {
+    transitioning = false;
+    $("submit").disabled = false;
+    $("run").disabled = false;
+    $("result").textContent = e.message;
+  }
 };
 
+$("ask").addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    if (!$("send").disabled) $("send").click();
+  }
+});
+
 $("send").onclick = async () => {
-  const m = $("ask").value.trim(); if (!m) return;
+  const m = $("ask").value.trim(); if (!m || transitioning) return;
   $("ask").value = ""; $("send").disabled = true;
   $("chat").insertAdjacentHTML("beforeend", "<div class='msg'><b>You:</b> " + esc(m) + "</div>");
   try {
@@ -165,7 +238,7 @@ $("send").onclick = async () => {
   $("send").disabled = false; $("chat").scrollTop = 1e9;
 };
 
-if (user) load().catch(() => { try { sessionStorage.removeItem("user"); } catch (e) {} user = null; $("consent").classList.remove("hidden"); $("work").classList.add("hidden"); });
+if (user) load().catch(() => { delStore("user"); user = null; $("consent").classList.remove("hidden"); $("work").classList.add("hidden"); });
 </script>
 </body>
 </html>

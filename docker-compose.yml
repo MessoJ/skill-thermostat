@@ -1,35 +1,51 @@
-# docker compose up --build        (set ADMIN_TOKEN, RUNNER_KEY and optionally ANTHROPIC_API_KEY in your environment or a .env file)
 services:
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8001}:8001"
+    environment:
+      - RUNNER_URL=http://runner:9000
+      - RUNNER_KEY=${RUNNER_KEY:-local-dev-runner-secret}
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - HELPER_MODEL=${HELPER_MODEL:-claude-sonnet-4-5}
+    volumes:
+      - study_data:/data
+    depends_on:
+      runner:
+        condition: service_healthy
+    networks:
+      - public_net
+      - sandbox_net
+    restart: unless-stopped
+
   runner:
-    build: { context: ., dockerfile: Dockerfile.runner }
+    build:
+      context: .
+      dockerfile: Dockerfile.runner
     environment:
-      RUNNER_KEY: ${RUNNER_KEY:?set RUNNER_KEY to a long random string}
-    networks: [sandbox]            # sandbox is internal: no internet, and nothing else is attached to it but the app
+      - RUNNER_KEY=${RUNNER_KEY:-local-dev-runner-secret}
+      - RUNNER_SLOTS=4
     read_only: true
-    tmpfs: ["/tmp:size=32m,noexec,nosuid"]
-    user: "10002:10002"
-    cap_drop: [ALL]
-    security_opt: ["no-new-privileges:true"]
-    mem_limit: 768m
-    pids_limit: 128
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    mem_limit: 512m
     cpus: 1.0
+    networks:
+      - sandbox_net
     restart: unless-stopped
-  app:
-    build: { context: ., dockerfile: Dockerfile }
-    environment:
-      RUNNER_URL: http://runner:9000
-      RUNNER_KEY: ${RUNNER_KEY:?set RUNNER_KEY}
-      ADMIN_TOKEN: ${ADMIN_TOKEN:?set ADMIN_TOKEN}
-      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
-    ports: ["127.0.0.1:8001:8001"]   # put a TLS reverse proxy in front of this before real participants
-    volumes: ["study-data:/data"]
-    networks: [sandbox, default]
-    depends_on: [runner]
-    cap_drop: [ALL]
-    security_opt: ["no-new-privileges:true"]
-    restart: unless-stopped
+
 networks:
-  sandbox:
+  public_net:
+    driver: bridge
+  sandbox_net:
+    driver: bridge
     internal: true
+
 volumes:
-  study-data:
+  study_data:

@@ -1,11 +1,25 @@
-# App image: the study web app. It never executes learner code itself when RUNNER_URL is set.
 FROM python:3.12-slim
-WORKDIR /srv
-COPY pyproject.toml ./
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser \
+    && mkdir -p /data && chown -R appuser:appuser /data
+
+COPY pyproject.toml README.md ./
 COPY skill_thermostat ./skill_thermostat
 COPY pilot ./pilot
-RUN pip install --no-cache-dir numpy scipy flask anthropic && useradd -r -u 10001 app && mkdir /data && chown app /data
-USER app
-ENV PYTHONUNBUFFERED=1 PYTHONPATH=/srv
+
+RUN pip install --no-cache-dir --upgrade pip \
+    && pip install --no-cache-dir -e .
+
+USER appuser
+
 EXPOSE 8001
-CMD ["python", "-m", "pilot.study_app", "--db", "/data/study.db", "--host", "0.0.0.0", "--port", "8001"]
+
+HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/')" || exit 1
+
+CMD ["python", "-m", "pilot.study_app", "--host", "0.0.0.0", "--port", "8001", "--db", "/data/study.db"]

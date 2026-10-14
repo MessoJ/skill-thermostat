@@ -1,10 +1,26 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "skill-thermostat"
-version = "0.1.0"
-description = "Keeps people's unassisted skill above a floor while they use AI assistants (research prototype)."
+version = "0.2.0"
+description = "Measure unassisted skill with adaptive AI-off probes and steer AI assistance."
+readme = "README.md"
 requires-python = ">=3.10"
-dependencies = ["numpy", "scipy"]
+dependencies = [
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "flask>=3.0",
+]
+
+[project.optional-dependencies]
+live = ["anthropic>=0.34"]
+dev = ["pytest>=8.0"]
+
+[tool.setuptools.packages.find]
+include = ["skill_thermostat*", "pilot*"]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
 testpaths = ["tests"]
+addopts = "-q"
