@@ -596,3 +596,33 @@ def test_unassisted_probe_has_focus_and_logs_blur_telemetry(client):
     with eng.tx() as con:
         row = con.execute("SELECT suspect, trusted FROM tasks WHERE id=?", (probe["task_id"],)).fetchone()
         assert row["suspect"] == 1
+
+
+def test_concept_topic_tags_across_all_exercises():
+    from pilot.exercises import ALL, DOMAINS, by_pool_and_tag, by_tag
+
+    assert len(ALL) >= 150
+    assert set(DOMAINS) == {"strings", "collections", "algorithms", "recursion_dp", "graphs"}
+
+    for e in ALL:
+        assert hasattr(e, "tag"), e.id
+        assert e.tag in DOMAINS, (e.id, e.tag)
+        assert e.tags == (e.tag,), (e.id, e.tags)
+
+    # Check every domain has exercises in the bank
+    for d in DOMAINS:
+        items = by_tag(d)
+        assert len(items) >= 5, f"Domain {d} has too few exercises: {len(items)}"
+
+    # Check pool filtering by domain works
+    p_strings = by_pool_and_tag("P", "strings")
+    assert len(p_strings) > 0 and all(e.pool == "P" and e.tag == "strings" for e in p_strings)
+
+
+def test_next_task_includes_concept_tag(client):
+    c, eng = client
+    u = join(c)
+    t = c.post("/api/next", json={}, headers=hdr(u)).json
+    assert "tag" in t
+    from pilot.exercises import DOMAINS
+    assert t["tag"] in DOMAINS

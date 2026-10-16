@@ -67,7 +67,7 @@ def run_persona(P, arm, seed, db):
                 ex = X.BANK[c.execute("SELECT ex_id FROM tasks WHERE id=?", (view["task_id"],)).fetchone()[0]]
             tier, kind = view["tier"], view["kind"]
             p_solo = norm.cdf(1.5 * (theta - ex.d))
-            cheats = tier == "off" and kind == "practice" and not view["focus"] and rng.random() < P.get("secret_ai", 0)
+            cheats = tier == "off" and kind == "practice" and not view.get("lockdown", False) and rng.random() < P.get("secret_ai", 0)
             if cheats:
                 p = p_solo + (1 - p_solo) * ASSIST["full"]
                 if rng.random() < 0.7:

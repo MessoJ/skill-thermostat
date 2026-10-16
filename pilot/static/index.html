@@ -150,7 +150,8 @@ async function load() {
   task = t;
   $("work").classList.remove("hidden");
   $("title").textContent = t.title;
-  $("kind").textContent = {anchor:"Baseline", assess_b:"Check-in", assess_c:"Final check", practice:"Practice"}[t.kind];
+  const kindLabel = {anchor:"Baseline", assess_b:"Check-in", assess_c:"Final check", practice:"Practice"}[t.kind] || t.kind;
+  $("kind").textContent = kindLabel + (t.tag ? " · " + t.tag.replace("_", "/") : "");
   $("prompt").textContent = t.prompt;
   $("sig").textContent = t.signature;
   $("examples").innerHTML = t.examples.map(e => "<div><code>" + esc(e.call) + "</code> → <code>" + esc(e.expected) + "</code></div>").join("");

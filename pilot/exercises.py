@@ -11,6 +11,9 @@ from dataclasses import dataclass
 _EXPECTED = {}
 
 
+DOMAINS = ("strings", "collections", "algorithms", "recursion_dp", "graphs")
+
+
 @dataclass(frozen=True)
 class Exercise:
     id: str
@@ -22,6 +25,11 @@ class Exercise:
     params: str
     ref: str        # reference solution: never sent to a client or to the AI helper
     cases: tuple    # argument tuples; the first two are shown to the learner as examples
+    tag: str = "collections"  # skill domain: strings, collections, algorithms, recursion_dp, graphs
+
+    @property
+    def tags(self):
+        return (self.tag,)
 
     @property
     def starter(self):
@@ -40,9 +48,63 @@ class Exercise:
                 for c, e in zip(self.cases[:2], self.expected()[:2])]
 
 
-def _ex(id, pool, d, title, prompt, sig, ref, cases):
+TAG_MAP = {
+    # Graphs (8 items)
+    'a28': 'graphs', 'p82': 'graphs', 'p83': 'graphs', 'p84': 'graphs',
+    'p86': 'graphs', 'p91': 'graphs', 'p93': 'graphs', 'p95': 'graphs',
+
+    # Recursion & DP (17 items)
+    'a19': 'recursion_dp', 'a26': 'recursion_dp', 'a27': 'recursion_dp',
+    'a29': 'recursion_dp', 'a30': 'recursion_dp', 'b11': 'recursion_dp',
+    'c11': 'recursion_dp', 'p20': 'recursion_dp', 'p45': 'recursion_dp',
+    'p80': 'recursion_dp', 'p85': 'recursion_dp', 'p87': 'recursion_dp',
+    'p88': 'recursion_dp', 'p89': 'recursion_dp', 'p96': 'recursion_dp',
+    'p104': 'recursion_dp', 'p105': 'recursion_dp',
+
+    # Strings (44 items)
+    'p02': 'strings', 'p04': 'strings', 'p06': 'strings', 'p12': 'strings',
+    'p18': 'strings', 'a02': 'strings', 'a04': 'strings', 'a08': 'strings',
+    'a10': 'strings', 'a12': 'strings', 'a13': 'strings', 'a16': 'strings',
+    'a22': 'strings', 'b02': 'strings', 'c02': 'strings', 'c04': 'strings',
+    'b07': 'strings', 'c07': 'strings', 'b12': 'strings', 'c12': 'strings',
+    'p22': 'strings', 'p23': 'strings', 'p24': 'strings', 'p25': 'strings',
+    'p26': 'strings', 'p27': 'strings', 'p28': 'strings', 'p29': 'strings',
+    'p30': 'strings', 'p31': 'strings', 'p32': 'strings', 'p33': 'strings',
+    'p34': 'strings', 'p35': 'strings', 'p36': 'strings', 'p37': 'strings',
+    'p38': 'strings', 'p39': 'strings', 'p40': 'strings', 'p41': 'strings',
+    'p42': 'strings', 'p43': 'strings', 'p46': 'strings', 'p99': 'strings',
+
+    # Algorithms (43 items)
+    'p13': 'algorithms', 'p14': 'algorithms', 'p15': 'algorithms', 'p16': 'algorithms',
+    'p17': 'algorithms', 'p19': 'algorithms', 'a03': 'algorithms', 'a05': 'algorithms',
+    'a09': 'algorithms', 'a15': 'algorithms', 'a18': 'algorithms', 'a20': 'algorithms',
+    'a21': 'algorithms', 'a23': 'algorithms', 'a24': 'algorithms', 'a25': 'algorithms',
+    'b10': 'algorithms', 'c10': 'algorithms', 'p53': 'algorithms', 'p55': 'algorithms',
+    'p56': 'algorithms', 'p60': 'algorithms', 'p62': 'algorithms', 'p63': 'algorithms',
+    'p64': 'algorithms', 'p66': 'algorithms', 'p67': 'algorithms', 'p69': 'algorithms',
+    'p70': 'algorithms', 'p71': 'algorithms', 'p72': 'algorithms', 'p75': 'algorithms',
+    'p76': 'algorithms', 'p78': 'algorithms', 'p79': 'algorithms', 'p92': 'algorithms',
+    'p94': 'algorithms', 'p97': 'algorithms', 'p98': 'algorithms', 'p100': 'algorithms',
+    'p101': 'algorithms', 'p102': 'algorithms', 'p103': 'algorithms',
+
+    # Collections (38 items)
+    'p01': 'collections', 'p03': 'collections', 'p05': 'collections', 'p07': 'collections',
+    'p08': 'collections', 'p09': 'collections', 'p10': 'collections', 'p11': 'collections',
+    'a01': 'collections', 'a06': 'collections', 'a07': 'collections', 'a11': 'collections',
+    'a14': 'collections', 'a17': 'collections', 'b01': 'collections', 'b03': 'collections',
+    'b04': 'collections', 'b05': 'collections', 'b06': 'collections', 'c01': 'collections',
+    'c03': 'collections', 'c05': 'collections', 'c06': 'collections', 'b08': 'collections',
+    'c08': 'collections', 'b09': 'collections', 'c09': 'collections', 'p47': 'collections',
+    'p48': 'collections', 'p49': 'collections', 'p50': 'collections', 'p51': 'collections',
+    'p52': 'collections', 'p57': 'collections', 'p58': 'collections', 'p59': 'collections',
+    'p61': 'collections', 'p65': 'collections',
+}
+
+
+def _ex(id, pool, d, title, prompt, sig, ref, cases, tag=None):
     fname, params = sig.split("(", 1)
-    return Exercise(id, pool, d, title, prompt, fname, params.rstrip(")"), ref.strip("\n") + "\n", tuple(cases))
+    tag_val = tag or TAG_MAP.get(id, "collections")
+    return Exercise(id, pool, d, title, prompt, fname, params.rstrip(")"), ref.strip("\n") + "\n", tuple(cases), tag_val)
 
 
 ALL = [
@@ -252,3 +314,11 @@ BANK = {e.id: e for e in ALL}
 
 def pool(name):
     return [e for e in ALL if e.pool == name]
+
+
+def by_tag(tag):
+    return [e for e in ALL if e.tag == tag]
+
+
+def by_pool_and_tag(pool_name, tag):
+    return [e for e in ALL if e.pool == pool_name and e.tag == tag]

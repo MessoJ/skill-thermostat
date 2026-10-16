@@ -186,7 +186,7 @@ class Engine:
                     signature=f"{ex.fname}({ex.params})", starter=starter, examples=ex.examples(),
                     tier=t["tier"], focus=bool(is_lockdown or is_off), lockdown=is_lockdown,
                     off=is_off, helper=t["tier"] != "off", urgent=bool(t["urgent"]),
-                    attempts=attempts, max_attempts=max_attempts)
+                    attempts=attempts, max_attempts=max_attempts, tag=ex.tag)
 
     # ---------------------------------------------------------------- study flow
     @staticmethod
