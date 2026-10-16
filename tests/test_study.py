@@ -352,3 +352,67 @@ def test_gemini_helper_request_format(monkeypatch):
     assert "key=test-key-123" in recorded["url"]
     assert recorded["data"]["generationConfig"]["maxOutputTokens"] == 600
     assert recorded["data"]["contents"][0]["role"] == "user"
+
+
+def test_practice_multi_try_and_passed_first_filter(client):
+    c, eng = client
+    u = join(c)
+    for _ in range(STUDY["anchors"]):
+        solve_current(c, eng, u, ok=True)
+    t = c.post("/api/next", json={}, headers=hdr(u)).json
+    assert t["kind"] == "practice"
+    assert t["attempts"] == 0
+    assert t["max_attempts"] == 3
+
+    # Attempt 1: wrong return value -> should fail and NOT finish the task, revealing test results
+    with eng.tx() as con:
+        ex_id = con.execute("SELECT ex_id FROM tasks WHERE id=?", (t["task_id"],)).fetchone()[0]
+    ex = X.BANK[ex_id]
+    wrong_fn = f"def {ex.fname}(*a):\n    return 'wrong'\n"
+    r1 = c.post("/api/submit", json={"task_id": t["task_id"], "code": wrong_fn}, headers=hdr(u)).json
+    assert r1["passed"] is False
+    assert r1["done"] is False
+    assert r1["attempts"] == 1
+    assert r1["passed_first"] is False
+    assert len(r1["details"]) > 2
+    assert not all(d["ok"] for d in r1["details"])
+
+    # /api/next returns the same pending task with attempts=1
+    t_again = c.post("/api/next", json={}, headers=hdr(u)).json
+    assert t_again["task_id"] == t["task_id"]
+    assert t_again["attempts"] == 1
+
+    # Attempt 2: solve correctly -> should pass and finish the task
+    with eng.tx() as con:
+        ex_id = con.execute("SELECT ex_id FROM tasks WHERE id=?", (t["task_id"],)).fetchone()[0]
+    r2 = c.post("/api/submit", json={"task_id": t["task_id"], "code": SOL[ex_id]}, headers=hdr(u)).json
+    assert r2["passed"] is True
+    assert r2["done"] is True
+    assert r2["attempts"] == 2
+    assert r2["passed_first"] is False
+
+    with eng.tx() as con:
+        row = con.execute("SELECT * FROM tasks WHERE id=?", (t["task_id"],)).fetchone()
+        assert row["passed"] == 1
+        assert row["passed_first"] == 0
+        assert row["attempts"] == 2
+        assert row["done"] is not None
+
+
+def test_practice_exhausts_attempts(client):
+    c, eng = client
+    u = join(c)
+    for _ in range(STUDY["anchors"]):
+        solve_current(c, eng, u, ok=True)
+    t = c.post("/api/next", json={}, headers=hdr(u)).json
+    assert t["kind"] == "practice"
+
+    r1 = c.post("/api/submit", json={"task_id": t["task_id"], "code": WRONG}, headers=hdr(u)).json
+    assert r1["done"] is False and r1["attempts"] == 1
+    r2 = c.post("/api/submit", json={"task_id": t["task_id"], "code": WRONG}, headers=hdr(u)).json
+    assert r2["done"] is False and r2["attempts"] == 2
+    r3 = c.post("/api/submit", json={"task_id": t["task_id"], "code": WRONG}, headers=hdr(u)).json
+    assert r3["done"] is True and r3["attempts"] == 3 and r3["passed"] is False
+
+    r4 = c.post("/api/submit", json={"task_id": t["task_id"], "code": WRONG}, headers=hdr(u))
+    assert r4.status_code == 404

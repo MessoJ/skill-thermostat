@@ -202,16 +202,31 @@ $("run").onclick = async () => {
 
 $("submit").onclick = async () => {
   if (transitioning) return;
-  transitioning = true;
   $("submit").disabled = true;
   $("run").disabled = true;
   try {
     const j = await api("submit", {task_id: task.task_id, code: $("code").value});
-    if (user && task) delStore("draft_" + user + "_" + task.task_id);
-    $("result").innerHTML = "<div class='" + (j.passed ? "ok" : "bad") + "'><b>" + (j.passed ? "Correct." : "Not quite") +
-      " (" + j.tests_passed + "/" + j.tests_total + " tests)</b>" + (j.error ? " " + esc(j.error) : "") + "</div>" +
-      (!j.passed && j.visible ? renderDetails(null, j.visible) : "");
-    setTimeout(() => { load().catch(err => { transitioning = false; $("result").textContent = err.message; }); }, 1200);
+    const isDone = j.done !== undefined ? j.done : (j.passed || (j.attempts && j.attempts >= j.max_attempts));
+    const detailsList = j.details || j.visible;
+    if (isDone) {
+      transitioning = true;
+      if (user && task) delStore("draft_" + user + "_" + task.task_id);
+      $("result").innerHTML = "<div class='" + (j.passed ? "ok" : "bad") + "'><b>" +
+        (j.passed ? "Correct." : "Not quite (attempts exhausted).") +
+        " (" + j.tests_passed + "/" + j.tests_total + " tests)</b>" + (j.error ? " " + esc(j.error) : "") + "</div>" +
+        (!j.passed && detailsList ? renderDetails(null, detailsList) : "");
+      setTimeout(() => { load().catch(err => { transitioning = false; $("result").textContent = err.message; }); }, 1200);
+    } else {
+      transitioning = false;
+      $("submit").disabled = false;
+      $("run").disabled = false;
+      const remaining = j.max_attempts - j.attempts;
+      $("result").innerHTML = "<div class='bad'><b>Attempt " + j.attempts + " of " + j.max_attempts +
+        " (" + j.tests_passed + "/" + j.tests_total + " tests passed). " +
+        (remaining > 0 ? remaining + " attempt" + (remaining > 1 ? "s" : "") + " remaining. Ask the AI helper or review the failed test cases below." : "") +
+        "</b>" + (j.error ? " " + esc(j.error) : "") + "</div>" +
+        (detailsList ? renderDetails(null, detailsList) : "");
+    }
   } catch (e) {
     transitioning = false;
     $("submit").disabled = false;

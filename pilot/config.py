@@ -24,4 +24,5 @@ STUDY = dict(
     urgent_max=3,          # learners may mark at most this many of their last `urgent_window` tasks urgent
     urgent_window=20,
     helper_max_per_task=30,
+    practice_max_attempts=3, # maximum attempts for practice exercises before moving on
 )

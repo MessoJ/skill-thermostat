@@ -32,7 +32,8 @@ CREATE TABLE IF NOT EXISTS users(
 CREATE TABLE IF NOT EXISTS tasks(
   id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT NOT NULL, ex_id TEXT, kind TEXT, tier TEXT, lockdown INTEGER,
   trusted INTEGER, alpha REAL, off INTEGER, sentinel INTEGER, urgent INTEGER, issued REAL, done REAL, passed INTEGER,
-  tests_passed INTEGER, tests_total INTEGER, suspect INTEGER DEFAULT 0, code TEXT);
+  tests_passed INTEGER, tests_total INTEGER, suspect INTEGER DEFAULT 0, code TEXT,
+  attempts INTEGER DEFAULT 0, passed_first INTEGER);
 CREATE TABLE IF NOT EXISTS events(id INTEGER PRIMARY KEY AUTOINCREMENT, task INTEGER, ts REAL, kind TEXT, data TEXT);
 CREATE TABLE IF NOT EXISTS skill_log(id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT, task INTEGER, ts REAL, n INTEGER,
   mean REAL, sd REAL, q10 REAL);
@@ -70,10 +71,16 @@ class Engine:
         con = sqlite3.connect(db_path, timeout=30)
         con.execute("PRAGMA journal_mode=WAL")
         con.executescript(SCHEMA)
-        try:
-            con.execute("ALTER TABLE users ADD COLUMN floor_abs REAL")
-        except sqlite3.OperationalError:
-            pass
+        for col, col_def in [("floor_abs", "REAL")]:
+            try:
+                con.execute(f"ALTER TABLE users ADD COLUMN {col} {col_def}")
+            except sqlite3.OperationalError:
+                pass
+        for col, col_def in [("attempts", "INTEGER DEFAULT 0"), ("passed_first", "INTEGER")]:
+            try:
+                con.execute(f"ALTER TABLE tasks ADD COLUMN {col} {col_def}")
+            except sqlite3.OperationalError:
+                pass
         con.close()
 
     # ---------------------------------------------------------------- plumbing
@@ -166,9 +173,13 @@ class Engine:
     @staticmethod
     def _view(t):
         ex = X.BANK[t["ex_id"]]
+        starter = t["code"] if ("code" in t.keys() and t["code"]) else ex.starter
+        max_attempts = STUDY.get("practice_max_attempts", 3) if t["kind"] == "practice" else 1
+        attempts = t["attempts"] if ("attempts" in t.keys() and t["attempts"]) else 0
         return dict(task_id=t["id"], kind=t["kind"], title=ex.title, prompt=ex.prompt,
-                    signature=f"{ex.fname}({ex.params})", starter=ex.starter, examples=ex.examples(),
-                    tier=t["tier"], focus=bool(t["lockdown"]), helper=t["tier"] != "off", urgent=bool(t["urgent"]))
+                    signature=f"{ex.fname}({ex.params})", starter=starter, examples=ex.examples(),
+                    tier=t["tier"], focus=bool(t["lockdown"]), helper=t["tier"] != "off", urgent=bool(t["urgent"]),
+                    attempts=attempts, max_attempts=max_attempts)
 
     # ---------------------------------------------------------------- study flow
     def join(self, consent, floor_abs=None):
@@ -243,8 +254,8 @@ class Engine:
             strict = int(kind != "practice" or sent)
             trusted = int(kind == "anchor" or sent)
             tid = c.execute(
-                "INSERT INTO tasks(user, ex_id, kind, tier, lockdown, trusted, alpha, off, sentinel, urgent, issued) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                "INSERT INTO tasks(user, ex_id, kind, tier, lockdown, trusted, alpha, off, sentinel, urgent, issued, attempts, passed_first) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,0,NULL)",
                 (uid, ex.id, kind, tier, strict, trusted, alpha, int(off), int(sent), int(is_urgent), time.time())).lastrowid
             return self._view(c.execute("SELECT * FROM tasks WHERE id=?", (tid,)).fetchone())
 
@@ -261,8 +272,8 @@ class Engine:
             t = self._pending(c, uid, task_id)
         ex = X.BANK[t["ex_id"]]
         res = runner.run_cases(code, ex.fname, ex.cases[:2], ex.expected()[:2])
-        return dict(error=res["fatal"], results=[
-            dict(call=e["call"], expected=e["expected"], got=d["got"], ok=d["ok"], err=d["err"])
+        return dict(error=res["fatal"], results=[\
+            dict(call=e["call"], expected=e["expected"], got=d["got"], ok=d["ok"], err=d["err"])\
             for e, d in zip(ex.examples(), res["details"])])
 
     def submit(self, uid, task_id, code):
@@ -275,17 +286,38 @@ class Engine:
             u = self._user(c, uid)
             t = self._pending(c, uid, task_id)                               # re-check: another submit may have won
             passed = int(res["ok"])
+            kind, off = t["kind"], bool(t["off"])
+            max_attempts = STUDY.get("practice_max_attempts", 3) if kind == "practice" else 1
+            cur_attempts = (t["attempts"] or 0) + 1
+            passed_first = passed if cur_attempts == 1 else (t["passed_first"] if t["passed_first"] is not None else passed)
+            is_done = bool(passed) or (cur_attempts >= max_attempts)
+
+            if not is_done:
+                c.execute("UPDATE tasks SET attempts=?, passed_first=?, code=?, tests_passed=?, tests_total=? WHERE id=?",
+                          (cur_attempts, passed_first, code, res["passed"], res["total"], task_id))
+                details = [
+                    dict(call=f"{ex.fname}({', '.join(repr(a) for a in c_args)})",
+                         expected=json.dumps(e),
+                         got=dd["got"],
+                         ok=dd["ok"],
+                         err=dd["err"])
+                    for c_args, e, dd in zip(ex.cases, ex.expected(), res["details"])
+                ]
+                visible = details[:2]
+                return dict(passed=False, done=False, attempts=cur_attempts, max_attempts=max_attempts,
+                            passed_first=bool(passed_first), tests_passed=res["passed"], tests_total=res["total"],
+                            error=res["fatal"], visible=visible, details=details)
+
             evs = c.execute("SELECT kind, data FROM events WHERE task=?", (task_id,)).fetchall()
             suspect = int(any(self._suspicious(e["kind"], e["data"]) for e in evs))
             trusted = int(bool(t["trusted"]) and not suspect)
-            kind, off = t["kind"], bool(t["off"])
             F = self._filter(u)
-            d, y, one = np.array([ex.d]), np.array([bool(passed)]), np.array([True])
+            d, one = np.array([ex.d]), np.array([True])
             floor_hat, ae_acc, ae_n = u["floor_hat"], u["ae_acc"], u["ae_n"]
             n_after = u[COUNTER[kind]] + 1
             measured = kind == "anchor" or (kind == "practice" and off)
             if kind == "anchor":
-                F.update(d, y, one, trusted=np.array([bool(trusted)]))
+                F.update(d, np.array([bool(passed)]), one, trusted=np.array([bool(trusted)]))
                 if n_after == STUDY["anchors"]:
                     if u["floor_abs"] is not None:
                         floor_hat = u["floor_abs"]
@@ -299,7 +331,7 @@ class Engine:
                         floor_hat = min(raw_floor, float(base.q10[0]) - 0.05)
             elif kind == "practice":
                 if off:
-                    F.update(d, y, one, trusted=np.array([bool(trusted)]))
+                    F.update(d, np.array([bool(passed_first)]), one, trusted=np.array([bool(trusted)]))
                 ae_acc += 0.0 if off else t["alpha"]
                 ae_n += 1
                 if ae_n == 10:      # same cadence as the simulator: drift step every 10 tasks
@@ -313,12 +345,24 @@ class Engine:
                           (uid, task_id, time.time(), n_meas, float(sm.mean[0]), float(sm.sd[0]), float(sm.q10[0])))
             c.execute(f"UPDATE users SET {COUNTER[kind]}=?, floor_hat=?, post=?, ae_acc=?, ae_n=? WHERE id=?",
                       (n_after, floor_hat, F.post.tobytes(), ae_acc, ae_n, uid))
-            c.execute("UPDATE tasks SET done=?, passed=?, tests_passed=?, tests_total=?, suspect=?, trusted=?, code=? "
-                      "WHERE id=?", (time.time(), passed, res["passed"], res["total"], suspect, trusted, code, task_id))
+            c.execute("UPDATE tasks SET done=?, passed=?, tests_passed=?, tests_total=?, suspect=?, trusted=?, code=?, "
+                      "attempts=?, passed_first=? WHERE id=?",
+                      (time.time(), passed, res["passed"], res["total"], suspect, trusted, code,
+                       cur_attempts, passed_first, task_id))
+
+        details = [
+            dict(call=f"{ex.fname}({', '.join(repr(a) for a in c_args)})",
+                 expected=json.dumps(e),
+                 got=dd["got"],
+                 ok=dd["ok"],
+                 err=dd["err"])
+            for c_args, e, dd in zip(ex.cases, ex.expected(), res["details"])
+        ] if kind == "practice" else None
         visible = [dict(call=e["call"], expected=e["expected"], got=dd["got"], ok=dd["ok"], err=dd["err"])
                    for e, dd in zip(ex.examples(), res["details"])]
-        return dict(passed=bool(passed), tests_passed=res["passed"], tests_total=res["total"], error=res["fatal"],
-                    visible=visible)
+        return dict(passed=bool(passed), done=True, attempts=cur_attempts, max_attempts=max_attempts,
+                    passed_first=bool(passed_first), tests_passed=res["passed"], tests_total=res["total"],
+                    error=res["fatal"], visible=visible, details=details if details is not None else visible)
 
     def ask_helper(self, uid, task_id, message, code):
         denied = False
@@ -396,6 +440,7 @@ class Engine:
                 out.append(dict(
                     user=u["id"], arm=u["arm"], anchors=rate(lambda t: t["kind"] == "anchor"),
                     practice=rate(lambda t: t["kind"] == "practice"),
+                    practice_first=rate(lambda t: t["kind"] == "practice" and t["passed_first"]),
                     probes=rate(lambda t: t["kind"] == "practice" and t["off"]),
                     n_probes=sum(1 for t in done if t["kind"] == "practice" and t["off"]),
                     n_sentinels=sum(1 for t in done if t["kind"] == "practice" and t["sentinel"]),
