@@ -28,7 +28,8 @@ SCHEMA = """
 CREATE TABLE IF NOT EXISTS users(
   id TEXT PRIMARY KEY, arm TEXT NOT NULL, created REAL, seed INTEGER, consent INTEGER,
   n_anchor INTEGER DEFAULT 0, n_practice INTEGER DEFAULT 0, n_assess_b INTEGER DEFAULT 0, n_assess_c INTEGER DEFAULT 0,
-  floor_hat REAL, post BLOB, ae_acc REAL DEFAULT 0, ae_n INTEGER DEFAULT 0, floor_abs REAL);
+  floor_hat REAL, post BLOB, ae_acc REAL DEFAULT 0, ae_n INTEGER DEFAULT 0, floor_abs REAL,
+  resume_code TEXT);
 CREATE TABLE IF NOT EXISTS tasks(
   id INTEGER PRIMARY KEY AUTOINCREMENT, user TEXT NOT NULL, ex_id TEXT, kind TEXT, tier TEXT, lockdown INTEGER,
   trusted INTEGER, alpha REAL, off INTEGER, sentinel INTEGER, urgent INTEGER, issued REAL, done REAL, passed INTEGER,
@@ -71,11 +72,14 @@ class Engine:
         con = sqlite3.connect(db_path, timeout=30)
         con.execute("PRAGMA journal_mode=WAL")
         con.executescript(SCHEMA)
-        for col, col_def in [("floor_abs", "REAL")]:
+        for col, col_def in [("floor_abs", "REAL"), ("resume_code", "TEXT")]:
             try:
                 con.execute(f"ALTER TABLE users ADD COLUMN {col} {col_def}")
             except sqlite3.OperationalError:
                 pass
+        for r in con.execute("SELECT id FROM users WHERE resume_code IS NULL").fetchall():
+            con.execute("UPDATE users SET resume_code=? WHERE id=?", (secrets.token_hex(3).upper(), r[0]))
+        con.execute("CREATE INDEX IF NOT EXISTS idx_users_resume_code ON users(resume_code)")
         for col, col_def in [("attempts", "INTEGER DEFAULT 0"), ("passed_first", "INTEGER")]:
             try:
                 con.execute(f"ALTER TABLE tasks ADD COLUMN {col} {col_def}")
@@ -182,17 +186,40 @@ class Engine:
                     attempts=attempts, max_attempts=max_attempts)
 
     # ---------------------------------------------------------------- study flow
+    @staticmethod
+    def _gen_resume_code(c):
+        chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
+        rnd = secrets.SystemRandom()
+        for _ in range(100):
+            code = "".join(rnd.choice(chars) for _ in range(6))
+            if c.execute("SELECT 1 FROM users WHERE resume_code=?", (code,)).fetchone() is None:
+                return code
+        return secrets.token_hex(3).upper()
+
     def join(self, consent, floor_abs=None):
         """floor_abs: an absolute skill standard for this person (e.g. a role requirement) instead of baseline - DELTA."""
         if not consent:
             raise EngineError("consent is required")
         uid, rnd = secrets.token_hex(8), secrets.SystemRandom()
         with self.tx() as c:
+            resume_code = self._gen_resume_code(c)
             counts = {a: c.execute("SELECT COUNT(*) FROM users WHERE arm=?", (a,)).fetchone()[0] for a in ARMS}
             arm = min(ARMS, key=lambda a: (counts[a], rnd.random()))    # blocked randomization
-            c.execute("INSERT INTO users(id, arm, created, seed, consent, post, floor_abs) VALUES (?,?,?,?,1,?,?)",
-                      (uid, arm, time.time(), rnd.randrange(2 ** 31), self._new_filter().post.tobytes(), floor_abs))
-        return dict(user=uid, arm=arm)
+            c.execute("INSERT INTO users(id, arm, created, seed, consent, post, floor_abs, resume_code) VALUES (?,?,?,?,1,?,?,?)",
+                      (uid, arm, time.time(), rnd.randrange(2 ** 31), self._new_filter().post.tobytes(), floor_abs, resume_code))
+        return dict(user=uid, arm=arm, resume_code=resume_code)
+
+    def resume(self, resume_code):
+        if not resume_code:
+            raise EngineError("resume code is required")
+        code = str(resume_code).strip().upper()
+        with self.tx() as c:
+            u = c.execute("SELECT * FROM users WHERE UPPER(resume_code)=?", (code,)).fetchone()
+            if u is None:
+                u = c.execute("SELECT * FROM users WHERE id=?", (code.lower(),)).fetchone()
+            if u is None:
+                raise NotFound("invalid resume code")
+            return dict(user=u["id"], arm=u["arm"], resume_code=u["resume_code"])
 
     def next_task(self, uid, urgent=False):
         with self.tx() as c:
@@ -411,7 +438,7 @@ class Engine:
         with self.tx() as c:
             u = self._user(c, uid)
             return dict(next=self._next_kind(u) or "done", anchors=u["n_anchor"], practice=u["n_practice"],
-                        assess_b=u["n_assess_b"], assess_c=u["n_assess_c"])
+                        assess_b=u["n_assess_b"], assess_c=u["n_assess_c"], resume_code=u["resume_code"])
 
     def verdict(self, uid):
         """Keep-using-AI / cut-back verdict for one person (see pilot/verdict.py). None until the baseline is complete."""

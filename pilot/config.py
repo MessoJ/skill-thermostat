@@ -15,14 +15,14 @@ DELTA = 0.40  # tolerated drop in unassisted skill below the baseline estimate
 FLOOR_RULE = "mean"  # 'lower': baseline lower bound - DELTA (lenient, safe with few anchors); 'mean': baseline mean - DELTA (as simulated)
 
 STUDY = dict(
-    anchors=20,            # baseline items drawn from pool A (30); all arms; strict lockdown
-    assess_n=6,            # items per assessment, drawn as matched B/C pairs from 12 pairs
-    practice_total=30,     # practice tasks per learner (pool P has 96)
-    assess_b_after=10,     # mid assessment (pool B) after this many practice tasks
-    assess_c_after=30,     # final assessment (pool C) after this many practice tasks
-    drill_every=5,         # fixed_drills arm: every 5th eligible practice task is AI-off
-    urgent_max=3,          # learners may mark at most this many of their last `urgent_window` tasks urgent
-    urgent_window=20,
+    anchors=8,              # baseline items drawn from pool A (CAT baseline); all arms; strict lockdown
+    assess_n=4,             # items per assessment, drawn as matched B/C pairs (Pool B mid, Pool C final)
+    practice_total=20,      # practice tasks per learner (pool P)
+    assess_b_after=8,       # mid assessment (pool B) after 8 practice tasks
+    assess_c_after=20,      # final assessment (pool C) after all 20 practice tasks
+    drill_every=5,          # fixed_drills arm: every 5th eligible practice task is AI-off
+    urgent_max=3,           # learners may mark at most this many of their last `urgent_window` tasks urgent
+    urgent_window=10,
     helper_max_per_task=30,
-    practice_max_attempts=3, # maximum attempts for practice exercises before moving on
+    practice_max_attempts=3,# maximum attempts for practice exercises before moving on
 )

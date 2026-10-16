@@ -46,7 +46,20 @@ def create_app(db_path="study.db", helper=None):
 
     @app.post("/api/join")
     def join():
-        return jsonify(eng.join(bool(body().get("consent"))))
+        b = body()
+        floor_abs = b.get("floor_abs")
+        if floor_abs is not None:
+            try:
+                floor_abs = float(floor_abs)
+            except (ValueError, TypeError):
+                floor_abs = None
+        return jsonify(eng.join(bool(b.get("consent")), floor_abs=floor_abs))
+
+    @app.post("/api/resume")
+    def resume():
+        b = body()
+        code = str(b.get("resume_code", "")).strip().upper()
+        return jsonify(eng.resume(code))
 
     @app.post("/api/next")
     def next_task():

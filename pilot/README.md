@@ -8,12 +8,12 @@ The `pilot/` package implements the randomized controlled study application buil
   1. `thermostat`: Adaptive AI assistance steered by the 10th-percentile skill lower bound ($q_{10}$) with hazard-scheduled AI-off probes and 3% lockdown sentinels.
   2. `always_on`: Full AI helper available on every practice task (no probes).
   3. `fixed_drills`: Full AI helper available except on every 5th eligible practice task, which is run AI-off.
-- **62-Task Flow (`config.STUDY`):**
-  1. **Adaptive Baseline (20 items from Pool A, 30 items total):** Strictly locked down (`tier = "off"`, focus telemetry active). Items are selected dynamically via **Computerized Adaptive Testing (CAT)** to maximize Posterior Expected Fisher Information at each step.
-  2. **Practice Block 1 (10 items from Pool P, 96 items total):** Assisted practice tasks target the learner's Zone of Proximal Development ($\hat{\theta}_{\text{mean}} + 0.30$), whereas unassisted probes select the Pool P item that maximizes Fisher Information over the current posterior.
-  3. **Mid-Study Assessment (6 items from Pool B, 12 items total):** Strictly locked down; never feeds the skill filter so it remains an independent outcome measure.
-  4. **Practice Block 2 (20 items from Pool P):** Continues arm-specific assistance and probing.
-  5. **Final Assessment (6 matched items from Pool C, 12 items total):** Strictly locked down; paired 1-to-1 by difficulty and structure with the learner's Pool B items.
+- **Right-Sized Study Flow (`config.STUDY`):** A tight, high-signal 32/36-task protocol (60–75 minutes) designed to prevent cognitive exhaustion while maintaining rigorous Bayesian skill estimation:
+  1. **Adaptive Baseline (8 CAT items from Pool A):** Strictly locked down (`tier = "off"`, focus telemetry active). Items are selected dynamically via **Computerized Adaptive Testing (CAT)** to maximize Posterior Expected Fisher Information at each step.
+  2. **Practice Block 1 (8 items from Pool P):** Assisted practice tasks target the learner's Zone of Proximal Development ($\hat{\theta}_{\text{mean}} + 0.30$), with up to 3 attempts and detailed edge-case feedback.
+  3. **Mid-Study Assessment (4 items from Pool B):** Strictly locked down; never feeds the skill filter so it remains an independent outcome measure.
+  4. **Practice Block 2 (12 items from Pool P):** Continues arm-specific assistance, probes, and multi-turn AI tutoring.
+  5. **Final Assessment (4 matched items from Pool C):** Strictly locked down; paired 1-to-1 by difficulty and structure with the learner's Pool B items.
 - **Personal & Role-Based Skill Floors:**
   - For students (`floor_abs=None`), the floor is anchored at $\min(\hat{\theta}_0, d_{\max}) - \Delta$ ($\Delta = 0.40$) and capped at $q_{10,0} - 0.05$ so neither ceiling scorers nor struggling novices are locked out of initial assistance.
   - For staff (`join(consent=True, floor_abs=...)`), the floor is fixed at the role's required unassisted standard.

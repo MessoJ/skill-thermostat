@@ -510,3 +510,58 @@ def test_helper_retry_on_violation(tmp_path):
     r = c.post("/api/helper", json={"task_id": t["task_id"], "message": "help", "code": "pass"}, headers=hdr(u)).json
     assert r["reply"] == "Here is a conceptual hint without leaking code."
     assert helper.attempt == 2
+
+
+def test_resume_session_with_6_char_code(client):
+    c, eng = client
+    u = join(c)
+    assert "resume_code" in u
+    code = u["resume_code"]
+    assert len(code) == 6 and code.isalnum()
+
+    # Resume with correct code
+    res = c.post("/api/resume", json={"resume_code": code})
+    assert res.status_code == 200
+    assert res.json["user"] == u["user"]
+    assert res.json["resume_code"] == code
+
+    # Resume with lower-case code is case-insensitive
+    res_lower = c.post("/api/resume", json={"resume_code": code.lower()})
+    assert res_lower.status_code == 200
+    assert res_lower.json["user"] == u["user"]
+
+    # Resume with bad code
+    res_bad = c.post("/api/resume", json={"resume_code": "INVALID"})
+    assert res_bad.status_code == 404
+
+    # Status returns resume code
+    status_resp = c.get("/api/status", headers=hdr(u)).json
+    assert status_resp["resume_code"] == code
+
+
+def test_right_sized_study_protocol_transitions(client):
+    from pilot.config import STUDY
+    assert STUDY["anchors"] == 8
+    assert STUDY["assess_n"] == 4
+    assert STUDY["practice_total"] == 20
+    assert STUDY["assess_b_after"] == 8
+    assert STUDY["assess_c_after"] == 20
+
+    c, eng = client
+    u = join(c)
+    kinds = []
+    for _ in range(50):
+        t = c.post("/api/next", json={}, headers=hdr(u)).json
+        if t.get("done"):
+            break
+        kinds.append(t["kind"])
+        solve_current(c, eng, u, ok=True)
+
+    # Invariants of the 32/36-task protocol:
+    # 8 anchors -> 8 practice -> 4 assess_b -> 12 practice -> 4 assess_c = 36 items total
+    assert kinds[:8] == ["anchor"] * 8
+    assert kinds[8:16] == ["practice"] * 8
+    assert kinds[16:20] == ["assess_b"] * 4
+    assert kinds[20:32] == ["practice"] * 12
+    assert kinds[32:36] == ["assess_c"] * 4
+    assert len(kinds) == 36

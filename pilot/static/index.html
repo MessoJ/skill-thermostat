@@ -38,12 +38,23 @@
     <p class="mut">Research-pilot notice: before real participants, this study needs an ethics review and a consent text approved by one. This text is a placeholder.</p>
     <label><input type="checkbox" id="agree"> I have read this and agree to take part.</label>
     <p><button id="start" class="primary" disabled>Start</button></p>
+
+    <div style="margin-top:20px; padding-top:16px; border-top:1px solid var(--line)">
+      <h2>Resume Your Session</h2>
+      <p class="mut">If you started previously or are continuing from another computer, enter your 6-character Resume Code:</p>
+      <div class="row">
+        <input id="resumeCode" maxlength="16" placeholder="e.g. 7K4P9X" style="width:140px; padding:8px 10px; border-radius:8px; border:1px solid var(--line); font-weight:bold; letter-spacing:1.5px; text-transform:uppercase; background:var(--bg); color:var(--fg)">
+        <button id="resumeBtn">Resume</button>
+      </div>
+      <div id="resumeErr" class="bad" style="margin-top:6px; font-size:0.9rem"></div>
+    </div>
   </section>
 
   <section id="work" class="hidden">
     <div id="banner" class="banner hidden"></div>
     <div class="card">
       <div class="row"><h2 id="title" style="flex:1"></h2><span id="kind" class="mut"></span></div>
+      <div class="mut" style="font-size:0.85rem; margin-bottom:8px">Participant Resume Code: <strong id="dispCode" style="color:var(--fg); letter-spacing:1px; background:var(--bg); padding:2px 6px; border-radius:4px; border:1px solid var(--line)"></strong> <span style="font-size:0.8rem">(save this code to resume your session on any device)</span></div>
       <p id="prompt"></p>
       <pre id="sig" class="mut"></pre>
       <div id="examples" class="mut"></div>
@@ -98,12 +109,37 @@ $("start").onclick = async () => {
     const j = await api("join", {consent: true});
     user = j.user;
     setStore("user", user);
+    if (j.resume_code) setStore("resume_code", j.resume_code);
     await load();
   } catch (e) {
     alert(e.message);
     $("start").disabled = !$("agree").checked;
   }
 };
+
+$("resumeBtn").onclick = async () => {
+  const code = $("resumeCode").value.trim().toUpperCase();
+  if (!code) return;
+  $("resumeErr").textContent = "";
+  $("resumeBtn").disabled = true;
+  try {
+    const j = await api("resume", {resume_code: code});
+    user = j.user;
+    setStore("user", user);
+    if (j.resume_code) setStore("resume_code", j.resume_code);
+    await load();
+  } catch (e) {
+    $("resumeErr").textContent = e.message;
+    $("resumeBtn").disabled = false;
+  }
+};
+
+$("resumeCode").addEventListener("keydown", e => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    $("resumeBtn").click();
+  }
+});
 
 async function load() {
   transitioning = false;
@@ -131,6 +167,8 @@ async function load() {
   b.classList.toggle("hidden", !t.focus);
   b.textContent = t.focus ? "Focus mode: no AI help, and please stay on this page. Switching away and pasting are recorded." : "";
   const s = await api("status");
+  const resumeCode = s.resume_code || getStore("resume_code") || "";
+  if (resumeCode) { setStore("resume_code", resumeCode); $("dispCode").textContent = resumeCode; }
   $("progress").textContent = "Baseline " + s.anchors + " · Practice " + s.practice + " · Check-ins " + (s.assess_b + s.assess_c);
 }
 
