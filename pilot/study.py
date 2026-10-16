@@ -180,9 +180,12 @@ class Engine:
         starter = t["code"] if ("code" in t.keys() and t["code"]) else ex.starter
         max_attempts = STUDY.get("practice_max_attempts", 3) if t["kind"] == "practice" else 1
         attempts = t["attempts"] if ("attempts" in t.keys() and t["attempts"]) else 0
+        is_off = bool(t["off"])
+        is_lockdown = bool(t["lockdown"])
         return dict(task_id=t["id"], kind=t["kind"], title=ex.title, prompt=ex.prompt,
                     signature=f"{ex.fname}({ex.params})", starter=starter, examples=ex.examples(),
-                    tier=t["tier"], focus=bool(t["lockdown"]), helper=t["tier"] != "off", urgent=bool(t["urgent"]),
+                    tier=t["tier"], focus=bool(is_lockdown or is_off), lockdown=is_lockdown,
+                    off=is_off, helper=t["tier"] != "off", urgent=bool(t["urgent"]),
                     attempts=attempts, max_attempts=max_attempts)
 
     # ---------------------------------------------------------------- study flow

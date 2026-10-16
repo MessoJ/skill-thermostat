@@ -565,3 +565,34 @@ def test_right_sized_study_protocol_transitions(client):
     assert kinds[20:32] == ["practice"] * 12
     assert kinds[32:36] == ["assess_c"] * 4
     assert len(kinds) == 36
+
+
+def test_unassisted_probe_has_focus_and_logs_blur_telemetry(client):
+    c, eng = client
+    u = join(c)
+    with eng.tx() as con:
+        con.execute("UPDATE users SET arm='fixed_drills' WHERE id=?", (u["user"],))
+    for _ in range(STUDY["anchors"]):
+        solve_current(c, eng, u, ok=True)
+
+    for _ in range(STUDY["drill_every"] - 1):
+        solve_current(c, eng, u, ok=True)
+
+    probe = c.post("/api/next", json={}, headers=hdr(u)).json
+    assert probe["kind"] == "practice"
+    assert probe["tier"] == "off"
+    assert probe["off"] is True
+    assert probe["lockdown"] is False
+    assert probe["focus"] is True
+
+    r = c.post("/api/event", json={"task_id": probe["task_id"], "kind": "blur"}, headers=hdr(u))
+    assert r.status_code == 200
+
+    with eng.tx() as con:
+        ex_id = con.execute("SELECT ex_id FROM tasks WHERE id=?", (probe["task_id"],)).fetchone()[0]
+    sub = c.post("/api/submit", json={"task_id": probe["task_id"], "code": SOL[ex_id]}, headers=hdr(u)).json
+    assert sub["passed"] is True
+
+    with eng.tx() as con:
+        row = con.execute("SELECT suspect, trusted FROM tasks WHERE id=?", (probe["task_id"],)).fetchone()
+        assert row["suspect"] == 1

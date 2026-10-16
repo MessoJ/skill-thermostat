@@ -208,10 +208,10 @@ $("code").addEventListener("keydown", e => {
 // Activity logging. Debounce blur so visibilitychange + window.blur do not double-log.
 $("code").addEventListener("paste", e => {
   const text = (e.clipboardData && e.clipboardData.getData("text")) || "";
-  if (task && task.focus) { e.preventDefault(); ev("paste_blocked", {chars: text.length}); }
+  if (task && task.lockdown) { e.preventDefault(); ev("paste_blocked", {chars: text.length}); }
   else ev("paste", {chars: text.length});
 });
-$("code").addEventListener("drop", e => { if (task && task.focus) { e.preventDefault(); ev("drop_blocked"); } });
+$("code").addEventListener("drop", e => { if (task && task.lockdown) { e.preventDefault(); ev("drop_blocked"); } });
 function logBlur() {
   const now = Date.now();
   if (now - lastBlurTs > 500) { lastBlurTs = now; ev("blur"); }
