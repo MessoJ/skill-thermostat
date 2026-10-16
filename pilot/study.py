@@ -15,7 +15,7 @@ from . import config
 from . import exercises as X
 from . import runner
 from .config import C_GRID, CONTROLLER, DELTA, STUDY, WIDE_SD, WIDE_SHIFT
-from .helper import make_helper, scrub
+from .helper import make_helper, scrub, violates
 from .verdict import LOOKBACK, MIN_OBS, MIN_PROBES, STALE_AFTER, decide
 
 ARMS = ("thermostat", "always_on", "fixed_drills")
@@ -376,11 +376,28 @@ class Engine:
                 n = c.execute("SELECT COUNT(*) FROM helper_log WHERE task=?", (task_id,)).fetchone()[0]
                 if n >= STUDY["helper_max_per_task"]:
                     raise Forbidden("helper limit reached for this task")
+                rows = c.execute("SELECT request, response FROM helper_log WHERE task=? ORDER BY id", (task_id,)).fetchall()
+                history = [dict(request=r["request"], response=r["response"]) for r in rows]
         if denied:
             raise Forbidden("the AI helper is off for this task")
         ex = X.BANK[t["ex_id"]]
         task = dict(id=ex.id, title=ex.title, prompt=ex.prompt, signature=f"{ex.fname}({ex.params})")
-        text = scrub(t["tier"], self.helper.reply(t["tier"], task, message, code), ex.ref)
+        reply_raw = self.helper.reply(t["tier"], task, message, code, history=history, ref=ex.ref)
+        if violates(t["tier"], reply_raw, ex.ref):
+            correction = (
+                f"Your previous response violated our strict pedagogy rules for '{t['tier']}' tier. "
+                + ("For 'hints' mode: explain concepts or errors, do NOT provide a complete solution, "
+                   "and at most 3 short lines of code to illustrate an idea. " if t["tier"] == "hints" else
+                   "For 'nudge' mode: reply with ONE short conceptual nudge or a single Socratic question in at most two sentences. Write NO code. ")
+                + "Please rewrite your answer now complying strictly with these constraints."
+            )
+            try:
+                retry_reply = self.helper.reply(t["tier"], task, correction, code, history=history, ref=ex.ref)
+                if not violates(t["tier"], retry_reply, ex.ref):
+                    reply_raw = retry_reply
+            except Exception:
+                pass
+        text = scrub(t["tier"], reply_raw, ex.ref)
         with self.tx() as c:
             self._pending(c, uid, task_id)
             n = c.execute("SELECT COUNT(*) FROM helper_log WHERE task=?", (task_id,)).fetchone()[0]

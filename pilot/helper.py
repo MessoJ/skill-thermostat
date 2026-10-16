@@ -83,8 +83,10 @@ class StubHelper:
 
     def __init__(self, solutions=None):
         self.solutions = solutions or {}
+        self.calls = []
 
-    def reply(self, tier, task, message, code):
+    def reply(self, tier, task, message, code, history=None, ref=None):
+        self.calls.append(dict(tier=tier, task=task, message=message, code=code, history=history))
         if tier == "full":
             sol = self.solutions.get(task["id"])
             return f"Here is one way to do it:\n```python\n{sol}```" if sol else "Here's a full walkthrough (stub)."
@@ -102,19 +104,12 @@ class GeminiHelper:
             raise ValueError("GEMINI_API_KEY must be set")
         self.model = model or os.environ.get("GEMINI_MODEL") or os.environ.get("HELPER_MODEL", "gemini-3.8-flash")
 
-    def reply(self, tier, task, message, code):
-        user = (f"Exercise: {task['title']}\n{task['prompt']}\nFunction: {task['signature']}\n\n"
-                f"Learner's current code:\n```python\n{code}\n```\n\nLearner's message: {message}")
+    def _call_api(self, contents, tier):
         payload = {
             "systemInstruction": {
                 "parts": [{"text": SYSTEM[tier]}]
             },
-            "contents": [
-                {
-                    "role": "user",
-                    "parts": [{"text": user}]
-                }
-            ],
+            "contents": contents,
             "generationConfig": {
                 "maxOutputTokens": 600,
                 "temperature": 0.7
@@ -168,6 +163,48 @@ class GeminiHelper:
         parts = candidates[0].get("content", {}).get("parts", [])
         return "".join(p.get("text", "") for p in parts)
 
+    def reply(self, tier, task, message, code, history=None, ref=None):
+        contents = []
+        if history:
+            first = True
+            for turn in history:
+                req = turn.get("request") if isinstance(turn, dict) else turn[0]
+                resp = turn.get("response") if isinstance(turn, dict) else turn[1]
+                if first:
+                    req_content = (f"Exercise: {task['title']}\n{task['prompt']}\nFunction: {task['signature']}\n\n"
+                                   f"Learner's message: {req}")
+                    first = False
+                else:
+                    req_content = req
+                contents.append({"role": "user", "parts": [{"text": req_content}]})
+                contents.append({"role": "model", "parts": [{"text": resp}]})
+
+            current_turn = (f"Learner's current code:\n```python\n{code}\n```\n\n"
+                            f"Learner's message: {message}")
+            contents.append({"role": "user", "parts": [{"text": current_turn}]})
+        else:
+            user = (f"Exercise: {task['title']}\n{task['prompt']}\nFunction: {task['signature']}\n\n"
+                    f"Learner's current code:\n```python\n{code}\n```\n\nLearner's message: {message}")
+            contents.append({"role": "user", "parts": [{"text": user}]})
+
+        text = self._call_api(contents, tier)
+
+        if ref is not None and violates(tier, text, ref):
+            correction = (
+                f"Your previous response violated our strict pedagogy rules for '{tier}' tier. "
+                + ("For 'hints' mode: explain concepts or errors, do NOT provide a complete solution, "
+                   "and at most 3 short lines of code to illustrate an idea. " if tier == "hints" else
+                   "For 'nudge' mode: reply with ONE short conceptual nudge or a single Socratic question in at most two sentences. Write NO code. ")
+                + "Please rewrite your answer now complying strictly with these constraints."
+            )
+            retry_contents = list(contents)
+            retry_contents.append({"role": "model", "parts": [{"text": text}]})
+            retry_contents.append({"role": "user", "parts": [{"text": correction}]})
+            text2 = self._call_api(retry_contents, tier)
+            return text2
+
+        return text
+
 
 class ClaudeHelper:
     """Claude via the Messages API. Needs `pip install anthropic` and ANTHROPIC_API_KEY."""
@@ -175,14 +212,53 @@ class ClaudeHelper:
     def __init__(self, model=None, api_key=None):
         import anthropic
         self.client = anthropic.Anthropic(api_key=api_key) if api_key else anthropic.Anthropic()
-        self.model = model or os.environ.get("HELPER_MODEL", "claude-sonnet-4-5")
+        self.model = model or os.environ.get("HELPER_MODEL") or "claude-3-7-sonnet-latest"
 
-    def reply(self, tier, task, message, code):
-        user = (f"Exercise: {task['title']}\n{task['prompt']}\nFunction: {task['signature']}\n\n"
-                f"Learner's current code:\n```python\n{code}\n```\n\nLearner's message: {message}")
+    def reply(self, tier, task, message, code, history=None, ref=None):
+        messages = []
+        if history:
+            first = True
+            for turn in history:
+                req = turn.get("request") if isinstance(turn, dict) else turn[0]
+                resp = turn.get("response") if isinstance(turn, dict) else turn[1]
+                if first:
+                    req_content = (f"Exercise: {task['title']}\n{task['prompt']}\nFunction: {task['signature']}\n\n"
+                                   f"Learner's message: {req}")
+                    first = False
+                else:
+                    req_content = req
+                messages.append({"role": "user", "content": req_content})
+                messages.append({"role": "assistant", "content": resp})
+
+            current_turn = (f"Learner's current code:\n```python\n{code}\n```\n\n"
+                            f"Learner's message: {message}")
+            messages.append({"role": "user", "content": current_turn})
+        else:
+            user = (f"Exercise: {task['title']}\n{task['prompt']}\nFunction: {task['signature']}\n\n"
+                    f"Learner's current code:\n```python\n{code}\n```\n\nLearner's message: {message}")
+            messages.append({"role": "user", "content": user})
+
         r = self.client.messages.create(model=self.model, max_tokens=600, system=SYSTEM[tier],
-                                        messages=[{"role": "user", "content": user}])
-        return "".join(b.text for b in r.content if getattr(b, "type", "") == "text")
+                                        messages=messages)
+        text = "".join(b.text for b in r.content if getattr(b, "type", "") == "text")
+
+        if ref is not None and violates(tier, text, ref):
+            correction = (
+                f"Your previous response violated our strict pedagogy rules for '{tier}' tier. "
+                + ("For 'hints' mode: explain concepts or errors, do NOT provide a complete solution, "
+                   "and at most 3 short lines of code to illustrate an idea. " if tier == "hints" else
+                   "For 'nudge' mode: reply with ONE short conceptual nudge or a single Socratic question in at most two sentences. Write NO code. ")
+                + "Please rewrite your answer now complying strictly with these constraints."
+            )
+            retry_messages = list(messages)
+            retry_messages.append({"role": "assistant", "content": text})
+            retry_messages.append({"role": "user", "content": correction})
+            r2 = self.client.messages.create(model=self.model, max_tokens=600, system=SYSTEM[tier],
+                                             messages=retry_messages)
+            text2 = "".join(b.text for b in r2.content if getattr(b, "type", "") == "text")
+            return text2
+
+        return text
 
 
 def make_helper(solutions=None):

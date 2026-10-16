@@ -416,3 +416,97 @@ def test_practice_exhausts_attempts(client):
 
     r4 = c.post("/api/submit", json={"task_id": t["task_id"], "code": WRONG}, headers=hdr(u))
     assert r4.status_code == 404
+
+
+def test_claude_helper_default_model_and_messages(monkeypatch):
+    import sys
+    from unittest.mock import MagicMock
+    from pilot.helper import ClaudeHelper
+
+    mock_anthropic = MagicMock()
+    mock_client = MagicMock()
+    mock_anthropic.Anthropic.return_value = mock_client
+    monkeypatch.setitem(sys.modules, 'anthropic', mock_anthropic)
+
+    h = ClaudeHelper()
+    assert h.model == 'claude-3-7-sonnet-latest'
+
+    # Test multi-turn message formatting
+    mock_resp = MagicMock()
+    mock_block = MagicMock()
+    mock_block.type = 'text'
+    mock_block.text = 'Here is a hint.'
+    mock_resp.content = [mock_block]
+    mock_client.messages.create.return_value = mock_resp
+
+    task = dict(id='p01', title='Sum evens', prompt='Sum all evens', signature='sum_evens(xs)')
+    history = [dict(request='how to start?', response='think of a loop')]
+    reply = h.reply('hints', task, 'is this right?', 'def sum_evens(xs): pass', history=history)
+
+    assert reply == 'Here is a hint.'
+    call_kwargs = mock_client.messages.create.call_args[1]
+    msgs = call_kwargs['messages']
+    assert len(msgs) == 3
+    assert msgs[0]['role'] == 'user' and 'how to start?' in msgs[0]['content'] and 'Sum evens' in msgs[0]['content']
+    assert msgs[1]['role'] == 'assistant' and msgs[1]['content'] == 'think of a loop'
+    assert msgs[2]['role'] == 'user' and 'is this right?' in msgs[2]['content']
+
+
+def test_helper_multi_turn_history_in_study(client):
+    c, eng = client
+    u = join(c)
+    with eng.tx() as con:
+        con.execute("UPDATE users SET arm='always_on' WHERE id=?", (u["user"],))
+    for _ in range(STUDY["anchors"]):
+        solve_current(c, eng, u, ok=True)
+    t = c.post("/api/next", json={}, headers=hdr(u)).json
+    assert t["kind"] == "practice" and t["helper"] is True
+
+    # First turn
+    r1 = c.post("/api/helper", json={"task_id": t["task_id"], "message": "First question", "code": "pass"}, headers=hdr(u))
+    assert r1.status_code == 200
+    # Second turn
+    r2 = c.post("/api/helper", json={"task_id": t["task_id"], "message": "Second question", "code": "pass"}, headers=hdr(u))
+    assert r2.status_code == 200
+
+    calls = [call for call in eng.helper.calls if call["task"]["id"] == t.get("task_id", "")]
+    # eng.helper is StubHelper; check calls recorded
+    last_call = eng.helper.calls[-1]
+    assert last_call["message"] == "Second question"
+    assert len(last_call["history"]) == 1
+    assert last_call["history"][0]["request"] == "First question"
+
+
+def test_helper_retry_on_violation(tmp_path):
+    from pilot.helper import StubHelper
+    from pilot.study_app import create_app
+
+    class ViolatingThenFixedHelper(StubHelper):
+        def __init__(self):
+            super().__init__()
+            self.attempt = 0
+
+        def reply(self, tier, task, message, code, history=None, ref=None):
+            self.attempt += 1
+            if self.attempt == 1:
+                # Violating code (more than 3 lines in hints tier)
+                return "```python\nx = 1\ny = 2\nk = 3\nw = 4v = 5\n```"
+            # Reprompt succeeded
+            return "Here is a conceptual hint without leaking code."
+
+    helper = ViolatingThenFixedHelper()
+    app = create_app(str(tmp_path / "test_retry.db"), helper)
+    c, eng = app.test_client(), app.engine
+
+    u = join(c)
+    with eng.tx() as con:
+        con.execute("UPDATE users SET arm='always_on' WHERE id=?", (u["user"],))
+    for _ in range(STUDY["anchors"]):
+        solve_current(c, eng, u, ok=True)
+    t = c.post("/api/next", json={}, headers=hdr(u)).json
+    with eng.tx() as con:
+        con.execute("UPDATE tasks SET tier='hints' WHERE id=?", (t["task_id"],))
+
+    r = c.post("/api/helper", json={"task_id": t["task_id"], "message": "help", "code": "pass"}, headers=hdr(u)).json
+    assert r["reply"] == "Here is a conceptual hint without leaking code."
+    assert helper.attempt == 2
