@@ -1,4 +1,6 @@
-"""The thermostat: turns a skill posterior into (assistance level, AI-off flag) for the next task."""
+"""The thermostat: turns a skill posterior into (assistance level, AI-off flag, discrete mode) for the next task."""
+from __future__ import annotations
+
 from dataclasses import dataclass
 from typing import NamedTuple
 
@@ -26,6 +28,10 @@ class ThermostatConfig:
     sd_target: float = 0.12
     risk_margin: float = 0.10   # "near floor" = within this of the floor
     sentinel_rate: float = 0.0  # share of eligible tasks run as trusted lockdown items
+    # Milestone 3 explicit 3-tier hysteresis thresholds on q10:
+    floor_probe: float = -0.35  # q10 < floor_probe -> LEVEL_PROBE_FAULT
+    floor_full: float = 0.25    # q10 >= floor_full -> LEVEL_FULL (with cadence K probe); between -> LEVEL_SKELETON
+    probe_cadence: int = 5      # fire scheduled retention probe every K-th assisted task in LEVEL_FULL
 
 
 class Thermostat:
@@ -55,3 +61,45 @@ class Thermostat:
         off = (elig & ((u_probe < pi) | (a <= 0))) | sent
         alpha = np.where(elig, a, 1.0)
         return alpha, off, sent
+
+    def decide_hysteresis(
+        self,
+        summ: Summary,
+        since_last_probe: int = 0,
+        floor_probe: float | None = None,
+        floor_full: float | None = None,
+        probe_cadence: int | None = None,
+        worker_idx: int = 0,
+    ) -> tuple[str, float, bool]:
+        """Explicit 3-tier hysteresis controller using posterior 10th percentile `q10` and probe cadence.
+
+        Tiers:
+          - `LEVEL_FULL` when `q10 >= floor_full` (+0.25), firing a scheduled `LEVEL_PROBE_FAULT`
+            every `probe_cadence` (K=5) consecutive assisted tasks to verify skill retention.
+          - `LEVEL_SKELETON` (moderate scaffolding) when `floor_probe <= q10 < floor_full`
+            (-0.35 <= q10 < +0.25).
+          - `LEVEL_PROBE_FAULT` (diagnostic lock / unassisted verification) when
+            `q10 < floor_probe` (< -0.35).
+
+        Returns `(controller_level, alpha, is_probe)`.
+        """
+        c = self.cfg
+        f_probe = c.floor_probe if floor_probe is None else float(floor_probe)
+        f_full = c.floor_full if floor_full is None else float(floor_full)
+        cadence = c.probe_cadence if probe_cadence is None else int(probe_cadence)
+
+        q10_val = float(summ.q10[worker_idx])
+        span = max(1e-6, f_full - f_probe)
+        alpha = float(np.clip((q10_val - f_probe) / span, 0.0, 1.0))
+
+        if q10_val < f_probe:
+            return "LEVEL_PROBE_FAULT", 0.0, True
+
+        if q10_val < f_full:
+            return "LEVEL_SKELETON", alpha, False
+
+        # q10_val >= f_full: eligible for LEVEL_FULL unless scheduled cadence probe is due
+        if cadence > 0 and int(since_last_probe) >= cadence:
+            return "LEVEL_PROBE_FAULT", 1.0, True
+
+        return "LEVEL_FULL", 1.0, False

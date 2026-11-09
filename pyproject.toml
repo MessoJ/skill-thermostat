@@ -18,9 +18,16 @@ dependencies = [
 live = ["anthropic>=0.34"]
 dev = ["pytest>=8.0"]
 
+[project.scripts]
+thermostat = "skill_thermostat.cli:main"
+
 [tool.setuptools.packages.find]
-include = ["skill_thermostat*", "pilot*"]
+include = ["skill_thermostat*", "workspace*", "tools*"]
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = ["tests"]
 addopts = "-q"
+
+
+

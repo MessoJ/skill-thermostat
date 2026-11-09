@@ -8,18 +8,21 @@ WORKDIR /app
 RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser \
     && mkdir -p /data && chown -R appuser:appuser /data
 
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md app.py ./
 COPY skill_thermostat ./skill_thermostat
-COPY pilot ./pilot
+COPY workspace ./workspace
+COPY tools ./tools
+COPY tests ./tests
 
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -e .
 
 USER appuser
 
-EXPOSE 8001
+EXPOSE 3000
 
 HEALTHCHECK --interval=15s --timeout=3s --start-period=5s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8001/')" || exit 1
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:3000/api/health')" || exit 1
 
-CMD ["python", "-m", "pilot.study_app", "--host", "0.0.0.0", "--port", "8001", "--db", "/data/study.db"]
+CMD ["python", "app.py"]
+

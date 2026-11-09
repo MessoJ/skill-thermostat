@@ -1,16 +1,11 @@
-"""Bayesian grid filter over (latent skill, probe-contamination rate) per worker.
+"""Bayesian grid filter over (latent skill, probe-contamination rate) per worker and domain."""
+from __future__ import annotations
 
-Observations come from AI-off tasks. A *trusted* observation (a sentinel item or a
-baseline anchor, administered under strict lockdown) is assumed uncontaminated and
-therefore pins skill without touching the contamination estimate. An ordinary AI-off
-probe may be secretly assisted with unknown probability c, so its likelihood is a
-mixture; comparing probe results against trusted ones is what identifies c.
-"""
 import numpy as np
 from scipy.special import ndtr
 
 from .controller import Summary
-from .model import A_DISC, Q_AI
+from .model import A_DISC, Q_AI, joint_observation_likelihood
 
 
 def _kernel(grid, shift, sd):
@@ -35,17 +30,16 @@ def _interp_quantile(grid, cdf, q=0.10):
 class SkillFilter:
     def __init__(self, n, grid, c_grid=(0.0,), prior_sd=1.5, q_sd=0.047,
                  robust_drift=False, wide_shift=-0.04, wide_sd=0.08,
-                 learn_shift=0.015, a_disc=A_DISC, q_ai=Q_AI):
+                 learn_shift=0.015, a_disc=A_DISC, q_ai=Q_AI, prior_mean=0.0):
         self.grid = np.asarray(grid, float)
         self.c = np.asarray(c_grid, float)
         self.a, self.q = a_disc, q_ai
-        row = np.exp(-0.5 * (self.grid / prior_sd) ** 2)
+        row = np.exp(-0.5 * ((self.grid - float(prior_mean)) / prior_sd) ** 2)
         row /= row.sum()
         c_prior = np.full(len(self.c), 1.0 / len(self.c))
         self.post = np.tile(row[None, :, None] * c_prior[None, None, :], (n, 1, 1))
         self.K = _kernel(self.grid, 0.0, q_sd)
         self.K_learn = _kernel(self.grid, learn_shift, q_sd) if robust_drift else self.K
-        # Heavily assisted workers may be drifting down: use a wider, downward-biased kernel for them.
         self.Kw = _kernel(self.grid, wide_shift, wide_sd) if robust_drift else self.K
 
     def predict(self, wide=None, learning=None):
@@ -75,6 +69,54 @@ class SkillFilter:
         sub = self.post[idx] * lik
         self.post[idx] = sub / sub.sum((1, 2), keepdims=True)
 
+    def update_joint(
+        self,
+        passed: bool,
+        time_to_green_sec: float,
+        edit_distance_ratio: float,
+        mode: str,
+        d: float = 0.0,
+        ast_verified: bool = True,
+        chars_per_sec: float | None = None,
+        trusted: bool = True,
+        huber_damping: bool = True,
+        worker_idx: int = 0,
+    ) -> str:
+        """Update worker posterior from joint tuple `(passed, time_to_green_sec, edit_distance_ratio, mode)`."""
+        lik_clean, lik_contam, status_flag = joint_observation_likelihood(
+            theta=self.grid,
+            passed=bool(passed),
+            time_to_green_sec=float(time_to_green_sec),
+            edit_distance_ratio=float(edit_distance_ratio),
+            mode=str(mode),
+            d=float(d),
+            ast_verified=bool(ast_verified),
+            chars_per_sec=chars_per_sec,
+            huber_damping=bool(huber_damping),
+            a=self.a,
+            q=self.q,
+        )
+
+        if status_flag == "UNVERIFIED_PASS":
+            return status_flag
+
+        if status_flag == "ANOMALY_PASTE_SUSPECTED":
+            if len(self.c) > 1:
+                c_boost = np.linspace(0.5, 1.8, len(self.c))[None, :]
+                sub = self.post[worker_idx] * c_boost
+                self.post[worker_idx] = sub / sub.sum()
+            return status_flag
+
+        c = self.c[None, :]  # (1, C)
+        if trusted:
+            lik_2d = lik_clean[:, None] * np.ones_like(c)
+        else:
+            lik_2d = (1.0 - c) * lik_clean[:, None] + c * lik_contam[:, None]
+
+        sub = self.post[worker_idx] * (lik_2d + 1e-12)
+        self.post[worker_idx] = sub / sub.sum()
+        return status_flag
+
     def summary(self):
         pg = self.post.sum(2)
         mean = pg @ self.grid
@@ -83,3 +125,43 @@ class SkillFilter:
         q10 = _interp_quantile(self.grid, cdf, 0.10)
         c_mean = self.post.sum(1) @ self.c
         return Summary(mean, sd, q10, cdf, c_mean)
+
+
+class MultiDomainSkillFilter:
+    """Maintains independent `SkillFilter` posteriors per domain while sharing a weak global hyper-prior."""
+
+    def __init__(
+        self,
+        grid=None,
+        c_grid=(0.0, 0.1, 0.2, 0.3, 0.4),
+        prior_sd: float = 1.5,
+        hyper_weight: float = 0.15,
+    ) -> None:
+        from .model import GRID as DEFAULT_GRID
+
+        self.grid = np.asarray(grid if grid is not None else DEFAULT_GRID, dtype=float)
+        self.c_grid = tuple(c_grid)
+        self.prior_sd = float(prior_sd)
+        self.hyper_weight = float(hyper_weight)
+        self.domains: dict[str, SkillFilter] = {}
+
+    def global_hyper_mean(self) -> float:
+        """Compute weakly-coupled hyper-prior mean across established domains."""
+        if not self.domains:
+            return 0.0
+        means = [float(f.summary().mean[0]) for f in self.domains.values()]
+        return float(self.hyper_weight * np.mean(means))
+
+    def get_domain_filter(self, domain: str = "py:algo") -> SkillFilter:
+        key = str(domain or "py:algo")
+        if key not in self.domains:
+            hyper_mu = self.global_hyper_mean()
+            self.domains[key] = SkillFilter(
+                1,
+                self.grid,
+                c_grid=self.c_grid,
+                prior_sd=self.prior_sd,
+                robust_drift=True,
+                prior_mean=hyper_mu,
+            )
+        return self.domains[key]

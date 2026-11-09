@@ -1,0 +1,8 @@
+{
+  "name": "Skill Thermostat — Local Wire Proxy & Telemetry Odometer",
+  "description": "Closed-loop Bayesian skill estimator, AST continuous friction wire proxy, local test-runner observer, and terminal odometer.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
